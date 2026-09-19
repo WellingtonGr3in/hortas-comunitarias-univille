@@ -11,6 +11,18 @@
             </div>
             
             <form @submit.prevent="handleSubmit">
+              <div class="mb-3">
+                <label for="horta_uuid" class="form-label">Horta *</label>
+                <select id="horta_uuid" v-model="form.horta_uuid" class="form-select" required>
+                  <option value="">Selecione uma horta</option>
+                  <option v-for="h in hortas" :key="h.uuid" :value="h.uuid">{{ h.nome_da_horta || h.nome }}</option>
+                </select>
+              </div>
+              <FormInput id="cpf" v-model="form.cpf" label="CPF" :required="true" />
+              <FormInput id="email" v-model="form.email" label="E-mail" type="email" :required="true" />
+              <FormInput id="senha" v-model="form.senha" label="Senha (mínimo 6 caracteres)" type="password" :required="true" />
+              <FormInput id="data_de_nascimento" v-model="form.data_de_nascimento" label="Data de nascimento" type="date" :required="true" />
+              <FormInput id="apelido" v-model="form.apelido" label="Apelido" :required="true" />
               <FormInput
                 id="nome"
                 v-model="form.nome"
@@ -56,9 +68,10 @@
 </template>
 
 <script>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import api from '@/services/api'
 import FormInput from '@/components/FormInput.vue'
 
 export default {
@@ -70,9 +83,14 @@ export default {
     
     const form = reactive({
       nome: '',
-      telefone: ''
+      telefone: '', cpf: '', email: '', senha: '', data_de_nascimento: '', apelido: '', horta_uuid: ''
     })
     
+    const hortas = ref([])
+    onMounted(async () => {
+      try { hortas.value = (await api.get('/hortas')).data }
+      catch { errorMessage.value = 'Não foi possível carregar as hortas.' }
+    })
     const errors = reactive({
       nome: '',
       telefone: ''
@@ -133,7 +151,7 @@ export default {
       
       loading.value = true
       try {
-        const res = await store.dispatch('carteiristas/createCarteirista', form)
+        const res = await store.dispatch('carteiristas/createCarteirista', { ...form, nome_completo: form.nome })
         loading.value = false
         
         if (res.success) {
@@ -143,12 +161,13 @@ export default {
         }
       } catch (error) {
         loading.value = false
-        errorMessage.value = 'Funcionalidade de Carteiristas não está disponível no backend. Por favor, implemente o CarteiristaController, Model e rotas necessárias.'
+        errorMessage.value = 'Não foi possível cadastrar o canteirista. Verifique os dados e tente novamente.'
       }
     }
     
     return {
       form,
+      hortas,
       errors,
       loading,
       errorMessage,

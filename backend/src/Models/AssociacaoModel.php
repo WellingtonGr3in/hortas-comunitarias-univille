@@ -9,6 +9,7 @@ class AssociacaoModel extends Model
     protected $table = 'associacoes';
     protected $primaryKey = 'uuid';
     public $incrementing = false;
+    protected $keyType = 'string';
 
     public $timestamps = true;
     const CREATED_AT = 'data_de_criacao';
@@ -22,7 +23,7 @@ class AssociacaoModel extends Model
         'descricao',
         'telefone_de_contato',
         'email',
-        'endereco',
+        'endereco_texto',
         'endereco_uuid',
         'url_estatuto_social_pdf',
         'url_ata_associacao_pdf',

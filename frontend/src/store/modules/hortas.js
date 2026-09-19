@@ -74,7 +74,7 @@ const actions = {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.detail || 'Erro ao criar horta'
+        message: error.response?.data?.detail || error.response?.data?.error || error.response?.data?.message || 'Erro ao criar horta'
       }
     }
   },
@@ -87,7 +87,7 @@ const actions = {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.detail || 'Erro ao atualizar horta'
+        message: error.response?.data?.detail || error.response?.data?.error || error.response?.data?.message || 'Erro ao atualizar horta'
       }
     }
   },
@@ -100,7 +100,7 @@ const actions = {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.detail || 'Erro ao deletar horta'
+        message: error.response?.data?.detail || error.response?.data?.error || error.response?.data?.message || 'Erro ao deletar horta'
       }
     }
   }

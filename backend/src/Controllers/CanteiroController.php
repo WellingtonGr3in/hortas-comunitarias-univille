@@ -119,21 +119,14 @@ class CanteiroController
         ];
         $data = (array)$request->getParsedBody();
         try {
-            $ownerUuid = $data['usuario_uuid'] ?? null;
-            $canteiro = $this->canteiroService->create($data, $payloadUsuarioLogado);
-
-            // RF08 Business Rule: Auto-create ownership relation if owner provided
-            if (!empty($ownerUuid)) {
-                try {
-                    $this->canteiroEUsuarioService->createOwnershipRelation(
-                        $canteiro->uuid,
-                        $ownerUuid,
-                        $payloadUsuarioLogado
-                    );
-                } catch (\Exception $e) {
-                    error_log("Aviso: Falha ao criar vínculo de propriedade para canteiro {$canteiro->uuid}: " . $e->getMessage());
+            $canteiro = \Illuminate\Database\Capsule\Manager::connection()->transaction(function () use ($data, $payloadUsuarioLogado) {
+                if (!empty($data['usuario_uuid'])) $data['status'] = 'Ocupado';
+                $canteiro = $this->canteiroService->create($data, $payloadUsuarioLogado);
+                if (!empty($data['usuario_uuid'])) {
+                    $this->canteiroEUsuarioService->createOwnershipRelation($canteiro->uuid, $data['usuario_uuid'], $payloadUsuarioLogado);
                 }
-            }
+                return $canteiro;
+            });
 
             // Formatar resposta
             $canteiroFormatado = [

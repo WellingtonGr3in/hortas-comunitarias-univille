@@ -11,6 +11,13 @@
             </div>
             
             <form @submit.prevent="handleSubmit">
+              <div class="mb-3">
+                <label for="associacao" class="form-label">Associação *</label>
+                <select id="associacao" v-model="form.associacao_vinculada_uuid" class="form-select" required>
+                  <option value="">Selecione uma associação</option>
+                  <option v-for="a in associacoes" :key="a.id" :value="a.id">{{ a.nome }}</option>
+                </select>
+              </div>
               <FormInput
                 id="nome"
                 v-model="form.nome"
@@ -91,9 +98,10 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import api from '@/services/api'
 import FormInput from '@/components/FormInput.vue'
 
 export default {
@@ -109,9 +117,15 @@ export default {
       nome: '',
       localizacao: '',
       telefone: '',
-      responsavel: ''
+      responsavel: '',
+      associacao_vinculada_uuid: ''
     })
     
+    const associacoes = ref([])
+    onMounted(async () => {
+      try { associacoes.value = (await api.get('/associacoes')).data }
+      catch { errorMessage.value = 'Não foi possível carregar as associações.' }
+    })
     const errors = reactive({ 
       nome: '',
       localizacao: '',
@@ -223,7 +237,7 @@ export default {
       }
     }
     
-    return { form, errors, loading, errorMessage, handleSubmit, formatTelefone }
+    return { associacoes, form, errors, loading, errorMessage, handleSubmit, formatTelefone }
   }
 }
 </script>

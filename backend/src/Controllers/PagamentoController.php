@@ -24,9 +24,9 @@ class PagamentoController
             $formatted = $pagamentos->map(function ($p) {
                 return [
                     'id' => $p->uuid,
-                    'Canteirista_uuid' => $p->Canteirista_uuid,
-                    'Canteirista_nome' => $p->Canteirista->nome ?? '',
-                    'Canteirista_telefone' => $p->Canteirista->telefone ?? '',
+                    'carteirista_uuid' => $p->carteirista_uuid,
+                    'carteirista_nome' => $p->Canteirista->nome ?? '',
+                    'carteirista_telefone' => $p->Canteirista->telefone ?? '',
                     'valor' => (float) $p->valor,
                     'forma_pagamento' => $p->forma_pagamento,
                     'data_pagamento' => $p->data_pagamento?->format('Y-m-d'),
@@ -56,9 +56,9 @@ class PagamentoController
             
             $data = [
                 'id' => $pagamento->uuid,
-                'Canteirista_uuid' => $pagamento->Canteirista_uuid,
-                'Canteirista_nome' => $pagamento->Canteirista->nome ?? '',
-                'Canteirista_telefone' => $pagamento->Canteirista->telefone ?? '',
+                'carteirista_uuid' => $pagamento->carteirista_uuid,
+                'carteirista_nome' => $pagamento->Canteirista->nome ?? '',
+                'carteirista_telefone' => $pagamento->Canteirista->telefone ?? '',
                 'valor' => (float) $pagamento->valor,
                 'forma_pagamento' => $pagamento->forma_pagamento,
                 'data_pagamento' => $pagamento->data_pagamento?->format('Y-m-d'),
@@ -94,7 +94,7 @@ class PagamentoController
 
             $responseData = [
                 'id' => $pagamento->uuid,
-                'Canteirista_uuid' => $pagamento->Canteirista_uuid,
+                'carteirista_uuid' => $pagamento->carteirista_uuid,
                 'valor' => (float) $pagamento->valor,
                 'forma_pagamento' => $pagamento->forma_pagamento,
                 'data_pagamento' => $pagamento->data_pagamento?->format('Y-m-d'),
@@ -130,7 +130,7 @@ class PagamentoController
 
             $responseData = [
                 'id' => $pagamento->uuid,
-                'Canteirista_uuid' => $pagamento->Canteirista_uuid,
+                'carteirista_uuid' => $pagamento->carteirista_uuid,
                 'valor' => (float) $pagamento->valor,
                 'forma_pagamento' => $pagamento->forma_pagamento,
                 'data_pagamento' => $pagamento->data_pagamento?->format('Y-m-d'),

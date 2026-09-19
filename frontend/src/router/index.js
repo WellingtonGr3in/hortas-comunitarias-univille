@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { jwtDecode } from 'jwt-decode'
 
 const routes = [
 {
@@ -151,7 +152,18 @@ routes
 })
 
 router.beforeEach((to, from, next) => {
-next()
+  let authenticated = false
+  try {
+    const token = localStorage.getItem('token')
+    authenticated = !!token && jwtDecode(token).exp * 1000 > Date.now()
+  } catch { /* Token inválido: voltar ao login. */ }
+  if (!authenticated) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+  }
+  if (to.meta.requiresAuth && !authenticated) return next('/login')
+  if (to.meta.guest && authenticated) return next('/')
+  next()
 })
 
 export default router

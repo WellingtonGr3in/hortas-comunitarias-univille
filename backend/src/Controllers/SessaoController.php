@@ -38,8 +38,6 @@ class SessaoController
     {
         $data = (array)$request->getParsedBody();
         
-        // DEBUG: Log do payload recebido
-        error_log("📦 PAYLOAD RECEBIDO NO CADASTRO: " . json_encode($data, JSON_PRETTY_PRINT));
         
         $cadastroCriado = $this->sessaoService->signUp($data);
         $response->getBody()->write(json_encode($cadastroCriado));

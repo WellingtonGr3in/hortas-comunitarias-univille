@@ -9,6 +9,7 @@ class PermissaoModel extends Model
     protected $table = 'permissoes';
     protected $primaryKey = 'uuid';
     public $incrementing = false;
+    protected $keyType = 'string';
 
     public $timestamps = true;
     const CREATED_AT = 'data_de_criacao';

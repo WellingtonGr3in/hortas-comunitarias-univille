@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Utils\Enums;
+
 enum Modulos: int
 {
     case USUARIOS = 0;
@@ -22,5 +24,3 @@ enum Modulos: int
     case CHAVES = 17;
     case FILA_DE_USUARIO = 18;
 }
-
-?>

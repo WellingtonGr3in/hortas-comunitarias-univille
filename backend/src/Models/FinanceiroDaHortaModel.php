@@ -9,6 +9,7 @@ class FinanceiroDaHortaModel extends Model
     protected $table = 'financeiro_da_horta';
     protected $primaryKey = 'uuid';
     public $incrementing = false;
+    protected $keyType = 'string';
 
     public $timestamps = true;
     const CREATED_AT = 'data_de_criacao';

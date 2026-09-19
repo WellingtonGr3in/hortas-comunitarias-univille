@@ -46,6 +46,13 @@ class CanteiristaService
 
     public function create(array $data, array $payloadUsuarioLogado): CanteiristaModel
     {
+        return \Illuminate\Database\Capsule\Manager::connection()->transaction(
+            fn() => $this->createWithUsuario($data, $payloadUsuarioLogado)
+        );
+    }
+
+    private function createWithUsuario(array $data, array $payloadUsuarioLogado): CanteiristaModel
+    {
         // TODO: Implementar verificação de permissões quando necessário
 
         $canteiros = $data['canteiros'] ?? [];
@@ -354,4 +361,3 @@ class CanteiristaService
         ];
     }
 }
-

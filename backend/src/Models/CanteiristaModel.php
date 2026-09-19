@@ -33,6 +33,11 @@ class CanteiristaModel extends Model
     ];
 
     // Relacionamentos
+    public function getNomeAttribute(): ?string
+    {
+        return $this->usuario?->nome_completo;
+    }
+
     public function horta()
     {
         return $this->belongsTo(HortaModel::class, 'horta_uuid', 'uuid');
@@ -74,4 +79,3 @@ class CanteiristaModel extends Model
         ]);
     }
 }
-

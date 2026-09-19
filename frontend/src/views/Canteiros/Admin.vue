@@ -60,7 +60,7 @@
           <select v-model="hortaFiltro" class="form-select">
             <option value="">Todas</option>
             <option v-for="h in hortas" :key="h.uuid" :value="h.uuid">
-              {{ h.nome }}
+              {{ h.nome_da_horta || h.nome }}
             </option>
           </select>
         </div>
@@ -73,7 +73,9 @@
       </div>
     </div>
 
-    <div class="card">
+    <div v-if="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+    <p v-if="loading">Carregando canteiros...</p>
+    <div v-else class="card">
       <div v-if="canteirosFiltrados.length === 0" class="card-body text-center text-muted">
         Nenhum canteiro encontrado.
       </div>
@@ -146,79 +148,15 @@
         <p><strong>Última Colheita:</strong> {{ formatarData(detalhe.data_ultima_colheita) }}</p>
         <p><strong>Status:</strong> {{ detalhe.status }}</p>
 
-        <hr />
 
-        <h6>Histórico</h6>
-        <ul class="mb-0">
-          <li v-for="(h, index) in detalhe.historico" :key="index">
-            {{ h }}
-          </li>
-        </ul>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-const STORAGE_KEY = 'canteiros_admin'
-
-const hortasPadrao = [
-  { uuid: 'horta-1', nome: 'Horta Comunitária Adhemar Garcia' },
-  { uuid: 'horta-2', nome: 'Horta Sabor da Terra' }
-]
-
-const usuariosPadrao = [
-  { uuid: 'usuario-1', nome: 'José Silva', cpf: '123.456.789-00' },
-  { uuid: 'usuario-2', nome: 'Maria Souza', cpf: '987.654.321-00' }
-]
-
-const canteirosPadrao = [
-  {
-    id: '1',
-    numero_identificador: 'C-001',
-    tamanho_m2: 10,
-    localizacao: 'Setor A - Fileira 1',
-    horta_uuid: 'horta-1',
-    horta_nome: 'Horta Comunitária Adhemar Garcia',
-    usuario_responsavel_uuid: 'usuario-1',
-    usuario_responsavel: 'José Silva',
-    usuario_responsavel_cpf: '123.456.789-00',
-    plantio_atual: 'Tomates',
-    data_ultima_colheita: '2026-06-10',
-    status: 'Ocupado',
-    historico: ['Vínculo criado em 2026-06-01', 'Plantio de tomates registrado']
-  },
-  {
-    id: '2',
-    numero_identificador: 'C-002',
-    tamanho_m2: 15,
-    localizacao: 'Setor B - Fileira 2',
-    horta_uuid: 'horta-2',
-    horta_nome: 'Horta Sabor da Terra',
-    usuario_responsavel_uuid: '',
-    usuario_responsavel: '',
-    usuario_responsavel_cpf: '',
-    plantio_atual: '',
-    data_ultima_colheita: '',
-    status: 'Disponível',
-    historico: ['Canteiro cadastrado e disponível']
-  },
-  {
-    id: '3',
-    numero_identificador: 'C-003',
-    tamanho_m2: 8,
-    localizacao: 'Setor C - Fileira 1',
-    horta_uuid: 'horta-1',
-    horta_nome: 'Horta Comunitária Adhemar Garcia',
-    usuario_responsavel_uuid: '',
-    usuario_responsavel: '',
-    usuario_responsavel_cpf: '',
-    plantio_atual: 'Alface',
-    data_ultima_colheita: '2026-06-15',
-    status: 'Em Preparo',
-    historico: ['Solo em preparo']
-  }
-]
+import api from '@/services/api'
+import canteirosService from '@/services/canteiros.service'
 
 export default {
   name: 'CanteirosAdminView',
@@ -228,7 +166,9 @@ export default {
       statusFiltro: '',
       hortaFiltro: '',
       detalhe: null,
-      hortas: hortasPadrao,
+      hortas: [],
+      errorMessage: '',
+      loading: true,
       canteiros: []
     }
   },
@@ -260,14 +200,18 @@ export default {
       }
     }
   },
-  mounted() {
-    const salvo = localStorage.getItem(STORAGE_KEY)
-    this.canteiros = salvo ? JSON.parse(salvo) : canteirosPadrao
-    this.salvar()
-  },
+  mounted() { this.carregar() },
   methods: {
-    salvar() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.canteiros))
+    async carregar() {
+      this.loading = true
+      this.errorMessage = ''
+      try {
+        const [canteiros, hortas] = await Promise.all([api.get('/canteiros/search'), api.get('/hortas')])
+        this.canteiros = canteiros.data
+        this.hortas = hortas.data
+      } catch (e) {
+        this.errorMessage = e.response?.data?.error || 'Não foi possível carregar os canteiros.'
+      } finally { this.loading = false }
     },
     limparFiltros() {
       this.q = ''
@@ -277,7 +221,7 @@ export default {
     abrirDetalhes(canteiro) {
       this.detalhe = canteiro
     },
-    excluir(canteiro) {
+    async excluir(canteiro) {
       if (canteiro.usuario_responsavel_uuid && canteiro.status === 'Ocupado') {
         alert('Não é possível excluir um canteiro com usuário ativo vinculado.')
         return
@@ -285,8 +229,10 @@ export default {
 
       if (!confirm(`Excluir o canteiro ${canteiro.numero_identificador}?`)) return
 
-      this.canteiros = this.canteiros.filter(c => c.id !== canteiro.id)
-      this.salvar()
+      try {
+        await canteirosService.delete(canteiro.id)
+        await this.carregar()
+      } catch (e) { this.errorMessage = e.response?.data?.error || 'Erro ao excluir canteiro.' }
     },
     classeStatus(status) {
       if (status === 'Ocupado') return 'bg-warning text-dark'

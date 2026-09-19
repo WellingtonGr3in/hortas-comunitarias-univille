@@ -57,12 +57,10 @@ const actions = {
 
       // Decodificar o token para obter usuario_uuid
       const decoded = jwtDecode(token)
-      console.log('🔑 Token decodificado:', decoded)
 
       // Buscar dados completos do usuário
       try {
         const userResponse = await api.get(`/usuarios/${decoded.usuario_uuid}`)
-        console.log('👤 Dados do usuário:', userResponse.data)
 
         const userData = userResponse.data
         const user = {

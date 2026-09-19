@@ -1,16 +1,11 @@
 -- Script de criação completa do banco
 -- MySQL 8.0+
 
-USE railway;
-
 -- Desabilitar verificação de foreign keys temporariamente
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Dropar tabelas existentes do init.sql
-DROP TABLE IF EXISTS produtos;
-DROP TABLE IF EXISTS hortas;
-DROP TABLE IF EXISTS usuarios;
-DROP TABLE IF EXISTS migrations;
+-- O banco selecionado pela configuração deve estar vazio no primeiro setup.
+-- Nunca apagar dados nem a tabela de controle de migrations.
 
 -- ========================================
 -- 1. TABELAS BASE (sem dependências)
@@ -90,7 +85,7 @@ CREATE TABLE permissoes (
 );
 
 -- Tabela de migrations
-CREATE TABLE migrations (
+CREATE TABLE IF NOT EXISTS migrations (
     migration VARCHAR(255) NOT NULL,
     executed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (migration)

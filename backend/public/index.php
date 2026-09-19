@@ -72,13 +72,13 @@ $routes($app);
 
 // --------------- Middlewares
 $app->addBodyParsingMiddleware();
-$app->add(ForcarJsonMiddleware::class);
-$app->add(FormatadorDeErrosMiddleware::class);
 
 // Sistema de permissões desabilitado temporariamente
 // $app->add(RoutePermissionMiddleware::class);
 
 $app->add(JwtMiddleware::class);
+$app->add(FormatadorDeErrosMiddleware::class);
+$app->add(ForcarJsonMiddleware::class);
 
 // --------------- Rodando app
 $app->run();

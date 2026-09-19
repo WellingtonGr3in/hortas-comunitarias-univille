@@ -1,5 +1,6 @@
 # Arquivos e pastas do sistema
 .DS_Store
+.runtime/
 .env
 .env.local
 .env.*.local
@@ -15,8 +16,7 @@ yarn-error.log*
 # Dependências
 node_modules/
 vendor/
-composer.lock
-package-lock.json
+# Lockfiles da aplicação são necessários para instalações reproduzíveis.
 yarn.lock
 
 # Build e cache

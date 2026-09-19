@@ -71,8 +71,8 @@ foreach ($files as $file) {
 
             echo "Migration {$migrationName} executada com sucesso.\n";
         } catch (Exception $e) {
-            echo "Erro ao executar migration {$migrationName}: " . $e->getMessage() . "\n";
-            break;
+            fwrite(STDERR, "Erro ao executar migration {$migrationName}: " . ($e->getPrevious() ?? $e)->getMessage() . "\n");
+            exit(1);
         }
     } else {
         echo "Arquivo {$file} ignorado (não é .sql).\n";

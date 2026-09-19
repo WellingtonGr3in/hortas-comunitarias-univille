@@ -165,7 +165,7 @@ export default {
       loading.value = true
       const res = await store.dispatch('carteiristas/updateCarteirista', {
         id: route.params.id,
-        data: form
+        data: { nome_completo: form.nome, telefone: form.telefone }
       })
       loading.value = false
       

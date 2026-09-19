@@ -81,6 +81,10 @@ class AssociacaoService
 
         $data['uuid'] = Uuid::uuid1()->toString();
         $data['usuario_criador_uuid'] = $payloadUsuarioLogado['usuario_uuid'];
+        if (array_key_exists('endereco', $data)) {
+            $data['endereco_texto'] = $data['endereco'];
+            unset($data['endereco']);
+        }
         $data['usuario_alterador_uuid'] = $payloadUsuarioLogado['usuario_uuid'];
 
         return $this->associacaoRepository->create($data);
@@ -111,6 +115,10 @@ class AssociacaoService
             unset($data['telefone']);
         }
 
+        if (array_key_exists('endereco', $data)) {
+            $data['endereco_texto'] = $data['endereco'];
+            unset($data['endereco']);
+        }
         $data['usuario_alterador_uuid'] = $payloadUsuarioLogado['usuario_uuid'];
 
         return $this->associacaoRepository->update($associacao, $data);

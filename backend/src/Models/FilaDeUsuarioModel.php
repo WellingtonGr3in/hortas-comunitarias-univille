@@ -9,6 +9,7 @@ class FilaDeUsuarioModel extends Model
     protected $table = 'fila_de_usuarios';
     protected $primaryKey = 'uuid';
     public $incrementing = false;
+    protected $keyType = 'string';
 
     public $timestamps = true;
     const CREATED_AT = 'data_de_criacao';

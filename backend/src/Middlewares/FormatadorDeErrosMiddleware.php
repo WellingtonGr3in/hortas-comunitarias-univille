@@ -24,6 +24,10 @@ class FormatadorDeErrosMiddleware
             ], JSON_UNESCAPED_UNICODE));
             return $response->withHeader('Content-Type', 'application/json')
                 ->withStatus(422);
+        } catch (\InvalidArgumentException $e) {
+            $response = new \Slim\Psr7\Response();
+            $response->getBody()->write(json_encode(['error' => $e->getMessage(), 'status' => 422], JSON_UNESCAPED_UNICODE));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(422);
         } catch (HttpException $e) {
             $response = new \Slim\Psr7\Response();
             $response->getBody()->write(json_encode([

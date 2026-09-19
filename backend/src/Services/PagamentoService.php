@@ -36,7 +36,7 @@ class PagamentoService
     public function create(array $data)
     {
         // Validações
-        if (empty($data['Canteirista_uuid'])) {
+        if (empty($data['carteirista_uuid'])) {
             throw new InvalidArgumentException('Canteirista é obrigatório');
         }
 
@@ -53,7 +53,7 @@ class PagamentoService
         }
 
         // Verifica se Canteirista existe
-        $Canteirista = $this->CanteiristaRepository->findByUuid($data['Canteirista_uuid']);
+        $Canteirista = $this->CanteiristaRepository->findByUuid($data['carteirista_uuid']);
         if (!$Canteirista) {
             throw new InvalidArgumentException('Canteirista não encontrado');
         }
@@ -69,8 +69,8 @@ class PagamentoService
     public function update(string $uuid, array $data)
     {
         // Validações
-        if (isset($data['Canteirista_uuid']) && !empty($data['Canteirista_uuid'])) {
-            $Canteirista = $this->CanteiristaRepository->findByUuid($data['Canteirista_uuid']);
+        if (isset($data['carteirista_uuid']) && !empty($data['carteirista_uuid'])) {
+            $Canteirista = $this->CanteiristaRepository->findByUuid($data['carteirista_uuid']);
             if (!$Canteirista) {
                 throw new InvalidArgumentException('Canteirista não encontrado');
             }

@@ -9,6 +9,7 @@ class HortaModel extends Model
     protected $table = 'hortas';
     protected $primaryKey = 'uuid';
     public $incrementing = false;
+    protected $keyType = 'string';
 
     public $timestamps = true;
     const CREATED_AT = 'data_de_criacao';

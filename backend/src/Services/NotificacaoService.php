@@ -63,11 +63,11 @@ class NotificacaoService
 
         // Validações específicas por tipo
         if ($data['tipo'] === 'aviso_canteirista') {
-            if (empty($data['Canteirista_uuid'])) {
+            if (empty($data['carteirista_uuid'])) {
                 throw new InvalidArgumentException('Canteirista é obrigatório para aviso específico');
             }
             
-            $Canteirista = $this->CanteiristaRepository->findByUuid($data['Canteirista_uuid']);
+            $Canteirista = $this->CanteiristaRepository->findByUuid($data['carteirista_uuid']);
             if (!$Canteirista) {
                 throw new InvalidArgumentException('Canteirista não encontrado');
             }
@@ -111,8 +111,8 @@ class NotificacaoService
             }
         }
 
-        if (isset($data['Canteirista_uuid']) && !empty($data['Canteirista_uuid'])) {
-            $Canteirista = $this->CanteiristaRepository->findByUuid($data['Canteirista_uuid']);
+        if (isset($data['carteirista_uuid']) && !empty($data['carteirista_uuid'])) {
+            $Canteirista = $this->CanteiristaRepository->findByUuid($data['carteirista_uuid']);
             if (!$Canteirista) {
                 throw new InvalidArgumentException('Canteirista não encontrado');
             }

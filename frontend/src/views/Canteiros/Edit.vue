@@ -46,11 +46,12 @@
               </div>
 
               <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-success">Salvar</button>
+                <button type="submit" class="btn btn-success" :disabled="loading">{{ loading ? 'Salvando...' : 'Salvar' }}</button>
                 <router-link to="/canteiros" class="btn btn-secondary">Cancelar</router-link>
               </div>
             </form>
 
+            <div v-else-if="loading" class="text-muted">Carregando canteiro...</div>
             <div v-else class="text-muted">
               Canteiro não encontrado.
             </div>
@@ -62,26 +63,34 @@
 </template>
 
 <script>
-const STORAGE_KEY = 'canteiros_admin'
+import canteirosService from '@/services/canteiros.service'
 
 export default {
   name: 'CanteirosEdit',
   data() {
     return {
+      loading: false,
       errorMessage: '',
       form: null
     }
   },
-  mounted() {
-    const lista = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-    const item = lista.find(c => c.id === this.$route.params.id)
-
-    if (item) {
-      this.form = { ...item }
-    }
+  async mounted() {
+    this.loading = true
+    try {
+      const { data } = await canteirosService.getById(this.$route.params.id)
+      this.form = {
+        numero_identificador: data.numero_identificador,
+        tamanho_m2: data.tamanho_m2,
+        localizacao: data.localizacao || '',
+        status: data.status || 'Disponível',
+        plantio_atual: data.plantio_atual || '',
+        data_ultima_colheita: data.data_ultima_colheita || ''
+      }
+    } catch (e) { this.errorMessage = e.response?.data?.error || 'Canteiro não encontrado.' }
+    finally { this.loading = false }
   },
   methods: {
-    handleSubmit() {
+    async handleSubmit() {
       this.errorMessage = ''
 
       if (!this.form.numero_identificador.trim()) {
@@ -94,26 +103,21 @@ export default {
         return
       }
 
-      if (!this.form.localizacao.trim()) {
+      if (!(this.form.localizacao || '').trim()) {
         this.errorMessage = 'Localização é obrigatória.'
         return
       }
 
-      const lista = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-      const index = lista.findIndex(c => c.id === this.$route.params.id)
-
-      if (index >= 0) {
-        this.form.tamanho_m2 = Number(this.form.tamanho_m2)
-        this.form.historico = [
-          ...(this.form.historico || []),
-          'Canteiro editado'
-        ]
-
-        lista[index] = this.form
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(lista))
-      }
-
-      this.$router.push('/canteiros')
+      this.loading = true
+      try {
+        await canteirosService.update(this.$route.params.id, {
+          ...this.form,
+          tamanho_m2: Number(this.form.tamanho_m2),
+          data_ultima_colheita: this.form.data_ultima_colheita || null
+        })
+        this.$router.push('/canteiros')
+      } catch (e) { this.errorMessage = e.response?.data?.error || 'Erro ao salvar canteiro.' }
+      finally { this.loading = false }
     }
   }
 }

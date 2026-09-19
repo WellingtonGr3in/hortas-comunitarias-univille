@@ -16,7 +16,7 @@ class PagamentoModel extends Model
 
     protected $fillable = [
         'uuid',
-        'Canteirista_uuid',
+        'carteirista_uuid',
         'valor',
         'forma_pagamento',
         'data_pagamento',
@@ -36,7 +36,7 @@ class PagamentoModel extends Model
 
     public function Canteirista()
     {
-        return $this->belongsTo(CanteiristaModel::class, 'Canteirista_uuid', 'uuid');
+        return $this->belongsTo(CanteiristaModel::class, 'carteirista_uuid', 'uuid');
     }
 }
 

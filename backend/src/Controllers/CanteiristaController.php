@@ -113,6 +113,7 @@ class CanteiristaController
     {
         return [
             'id' => $Canteirista->uuid,
+            'nome' => $Canteirista->usuario->nome_completo ?? '',
             'usuario_uuid' => $Canteirista->usuario_uuid,
             'telefone' => $Canteirista->telefone ?? null,
             'ativo' => $Canteirista->ativo,
@@ -286,4 +287,3 @@ class CanteiristaController
         return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
     }
 }
-

@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Utils\Enums;
+
 enum Permissoes: int
 {
     case LER = 0;
@@ -7,5 +9,3 @@ enum Permissoes: int
     case EDITAR = 2;
     case DELETAR = 3;
 }
-
-?>

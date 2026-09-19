@@ -9,6 +9,7 @@ class PermissaoDeCargoModel extends Model
     protected $table = 'permissoes_de_cargo';
     protected $primaryKey = 'uuid';
     public $incrementing = false;
+    protected $keyType = 'string';
 
     public $timestamps = true;
     const CREATED_AT = 'data_de_criacao';

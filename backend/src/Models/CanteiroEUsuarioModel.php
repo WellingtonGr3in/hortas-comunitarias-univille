@@ -9,6 +9,7 @@ class CanteiroEUsuarioModel extends Model
     protected $table = 'canteiros_e_usuarios';
     protected $primaryKey = 'uuid';
     public $incrementing = false;
+    protected $keyType = 'string';
 
     public $timestamps = true;
     const CREATED_AT = 'data_de_criacao';

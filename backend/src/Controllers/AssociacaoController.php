@@ -30,6 +30,8 @@ class AssociacaoController
         $associacoesFormatadas = $associacoes->map(function($associacao) {
             return [
                 'id' => $associacao->uuid,
+                'descricao' => $associacao->descricao,
+                'endereco' => $associacao->endereco_texto ?? $associacao->endereco?->logradouro,
                 'nome' => $associacao->razao_social ?? $associacao->nome_fantasia ?? '-',
                 'telefone' => $associacao->telefone_de_contato ?? '-',
                 'email' => $associacao->email ?? '-',
@@ -55,9 +57,9 @@ class AssociacaoController
         // Formatar resposta para o frontend
         $associacaoFormatada = [
             'id' => $associacao->uuid,
+                'descricao' => $associacao->descricao,
+                'endereco' => $associacao->endereco_texto ?? $associacao->endereco?->logradouro,
             'nome' => $associacao->razao_social ?? $associacao->nome_fantasia ?? '',
-            'descricao' => $associacao->descricao ?? '',
-            'endereco' => $associacao->endereco ?? '',
             'telefone' => $associacao->telefone_de_contato ?? '',
             'email' => $associacao->email ?? '',
         ];
@@ -82,6 +84,8 @@ class AssociacaoController
         // Formatar resposta
         $associacaoFormatada = [
             'id' => $associacao->uuid,
+                'descricao' => $associacao->descricao,
+                'endereco' => $associacao->endereco_texto ?? $associacao->endereco?->logradouro,
             'nome' => $associacao->razao_social ?? $associacao->nome_fantasia,
             'telefone' => $associacao->telefone_de_contato ?? null,
             'email' => $associacao->email ?? null,
@@ -107,6 +111,8 @@ class AssociacaoController
         // Formatar resposta
         $associacaoFormatada = [
             'id' => $associacao->uuid,
+                'descricao' => $associacao->descricao,
+                'endereco' => $associacao->endereco_texto ?? $associacao->endereco?->logradouro,
             'nome' => $associacao->razao_social ?? $associacao->nome_fantasia,
             'telefone' => $associacao->telefone_de_contato ?? null,
             'email' => $associacao->email ?? null,

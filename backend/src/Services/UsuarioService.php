@@ -281,7 +281,7 @@ class UsuarioService
                     // Horta deve pertencer a associacao_uuid de quem está tentando atribuir
                     if (!empty($data['horta_uuid'])) {
                         $horta = $this->hortaService->findByUuid($data['horta_uuid'], $payloadUsuarioLogado);
-                        if ($horta->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
+                        if ($horta->associacao_vinculada_uuid != $payloadUsuarioLogado['associacao_uuid']) {
                             throw new Exception('Horta inválida para sua associação UUID');
                         }
                     }
@@ -293,7 +293,7 @@ class UsuarioService
                     if (!empty($data['chave_uuid'])) {
                         $chave = $this->chaveService->findByUuid($data['chave_uuid'], $payloadUsuarioLogado);
                         $horta = $this->hortaService->findByUuid($chave->horta_uuid, $payloadUsuarioLogado);
-                        if ($horta->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
+                        if ($horta->associacao_vinculada_uuid != $payloadUsuarioLogado['associacao_uuid']) {
                             throw new Exception('Chave inválida para horta que não é de sua associação UUID');
                         }
                     }
@@ -461,14 +461,14 @@ class UsuarioService
                 // Valida horta/chave
                 if (!empty($data['horta_uuid'])) {
                     $horta = $this->hortaService->findByUuid($data['horta_uuid'], $payloadUsuarioLogado);
-                    if ($horta->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
+                    if ($horta->associacao_vinculada_uuid != $payloadUsuarioLogado['associacao_uuid']) {
                         throw new Exception('Horta inválida para sua associação');
                     }
                 }
                 if (!empty($data['chave_uuid'])) {
                     $chave = $this->chaveService->findByUuid($data['chave_uuid'], $payloadUsuarioLogado);
                     $horta = $this->hortaService->findByUuid($chave->horta_uuid, $payloadUsuarioLogado);
-                    if ($horta->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
+                    if ($horta->associacao_vinculada_uuid != $payloadUsuarioLogado['associacao_uuid']) {
                         throw new Exception('Chave inválida para horta da sua associação');
                     }
                 }

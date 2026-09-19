@@ -59,6 +59,7 @@ export default {
       const message =
         error.response.data?.detail ||
         error.response.data?.message ||
+        error.response.data?.error ||
         'Erro ao processar requisição'
 
       return {

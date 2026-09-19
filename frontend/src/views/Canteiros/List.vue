@@ -38,7 +38,7 @@ export default {
 
     // true = usa dados fake para conseguir mexer na tela sem login/API
     // depois que o login funcionar, troque para false
-    const usarMock = true
+    const usarMock = false
 
     const mockCanteiros = [
       {

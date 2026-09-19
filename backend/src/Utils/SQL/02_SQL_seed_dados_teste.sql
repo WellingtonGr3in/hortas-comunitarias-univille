@@ -3,7 +3,7 @@
 -- ========================================
 -- TRANSAÇÃO SE DER ERRO
 -- ========================================
-SET autocommit = 0;
+
 START TRANSACTION;
 
 -- ================= Usuário Dummy serve para testar condições na camada de aplicação, terá todas as permissões mas não o cargo =================
@@ -159,7 +159,7 @@ SET @ultimaHortaUUID = (SELECT h.uuid FROM hortas h ORDER BY h.data_de_criacao D
 
 INSERT
 	INTO
-	railway.chaves
+	chaves
 (uuid,
 	codigo,
 	horta_uuid,
@@ -191,7 +191,7 @@ SET horta_uuid = @ultimaHortaUUID,
     endereco_uuid = (SELECT endereco_uuid FROM hortas WHERE uuid = @ultimaHortaUUID)
 WHERE uuid = @userAdminUUID;
 
-INSERT INTO railway.fila_de_usuarios
+INSERT INTO fila_de_usuarios
 (uuid,
 	usuario_uuid,
 	horta_uuid,

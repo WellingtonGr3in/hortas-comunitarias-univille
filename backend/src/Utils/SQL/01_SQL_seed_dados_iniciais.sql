@@ -2,10 +2,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Limpa tabelas na ordem correta
-DELETE FROM permissoes_de_cargo;
-DELETE FROM usuarios;
-DELETE FROM cargos;
-DELETE FROM permissoes;
 
 -- //// Adiciona cargos base em "cargos"
 INSERT INTO cargos (uuid, codigo, slug, nome, descricao, cor, excluido, usuario_criador_uuid, usuario_alterador_uuid)
@@ -22,8 +18,6 @@ SELECT UUID(), 2, 'admin_horta_geral', 'Administração da Horta', 'Gerencia tod
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ================= LIMPEZA =================
-DELETE FROM permissoes_de_cargo;
-DELETE FROM permissoes;
 
 -- ================= INSERTS DE PERMISSÕES =================
 

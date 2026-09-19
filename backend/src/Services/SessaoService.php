@@ -33,6 +33,10 @@ class SessaoService
             throw new Exception("Senha inválida");
         }
 
+        if (in_array((string) $usuario->status_de_acesso, ['inativo', 'bloqueado', '0'], true)) {
+            throw new Exception('Acesso do usuário bloqueado');
+        }
+
         $payload = [
             'usuario_uuid' => $usuario->uuid,
             'cargo_uuid' => $usuario->cargo_uuid,
@@ -112,4 +116,3 @@ class SessaoService
         });
     }
 }
-

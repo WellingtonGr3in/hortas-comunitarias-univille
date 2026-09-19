@@ -87,6 +87,11 @@ class HortaService
 
     public function create(array $data, array $payloadUsuarioLogado): HortaModel
     {
+        return \Illuminate\Database\Capsule\Manager::connection()->transaction(fn() => $this->createWithEndereco($data, $payloadUsuarioLogado));
+    }
+
+    private function createWithEndereco(array $data, array $payloadUsuarioLogado): HortaModel
+    {
         
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
 
@@ -126,7 +131,19 @@ class HortaService
             unset($data['responsavel']);
         }
         
-        // Remover campo localizacao que não existe no banco (vem do endereco)
+        if (empty($data['associacao_vinculada_uuid'])) {
+            throw new \InvalidArgumentException('Selecione uma associação para a horta.');
+        }
+        $this->associacaoService->findByUuid($data['associacao_vinculada_uuid'], $payloadUsuarioLogado);
+        if (empty($data['endereco_uuid'])) {
+            if (empty(trim($data['localizacao'] ?? ''))) throw new \InvalidArgumentException('Localização é obrigatória.');
+            $endereco = \App\Models\EnderecoModel::create([
+                'uuid' => Uuid::uuid4()->toString(),
+                'logradouro' => $data['localizacao'],
+                'usuario_criador_uuid' => $payloadUsuarioLogado['usuario_uuid'],
+            ]);
+            $data['endereco_uuid'] = $endereco->uuid;
+        }
         unset($data['localizacao']);
         
         // Validação mínima - apenas nome é obrigatório (após o mapeamento)
@@ -147,36 +164,7 @@ class HortaService
         $data['usuario_alterador_uuid'] =  $payloadUsuarioLogado['usuario_uuid'];
         $data['excluido'] = 0;
         
-        // Usar endereco padrão se não fornecido (temporário para desenvolvimento)
-        if (!isset($data['endereco_uuid'])) {
-            $data['endereco_uuid'] = 'f09aa8ad-b6df-11f0-bc8f-ea87c263dbd8'; // Endereço padrão das seeds
-        }
-        
-        // Usar associação do usuário logado se não fornecido
-        if (!isset($data['associacao_vinculada_uuid'])) {
-            $data['associacao_vinculada_uuid'] = $payloadUsuarioLogado['associacao_uuid'] ?? '226d08c0-b6e0-11f0-89ef-7af5a37cd6d7';
-        }
-
-        // Validações opcionais
-        
-        if (!empty($data['associacao_vinculada_uuid'])){
-            try {
-                $this->associacaoService->findByUuid($data['associacao_vinculada_uuid'], $payloadUsuarioLogado);
-            } catch (\Exception $e) {
-                // Associação não encontrada ou sem permissão, remover do data
-                unset($data['associacao_vinculada_uuid']);
-            }
-        }
-
-        if (!empty($data['endereco_uuid'])) {
-            try {
-                $this->enderecoService->findByUuid($data['endereco_uuid'], $payloadUsuarioLogado);
-            } catch (\Exception $e) {
-                // Endereço não encontrado, remover do data
-                unset($data['endereco_uuid']);
-            }
-        }
-        
+        $this->enderecoService->findByUuid($data['endereco_uuid'], $payloadUsuarioLogado);
 
         $horta = $this->hortaRepository->create($data);
         
@@ -234,7 +222,11 @@ class HortaService
         }
         
         // Remover campos que não existem no banco
-        unset($data['localizacao']); // Vem do endereço, não da horta
+        if (isset($data['localizacao'])) {
+            if (trim($data['localizacao']) === '') throw new \InvalidArgumentException('Localização é obrigatória.');
+            $this->enderecoService->update($horta->endereco_uuid, ['logradouro' => $data['localizacao']], $payloadUsuarioLogado);
+        }
+        unset($data['localizacao']);
         unset($data['id']); // Remover o ID do frontend
         
         // Validação simplificada
