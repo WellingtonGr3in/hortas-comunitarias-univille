@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Hortas Comunitárias",
+    "slug": "hortas-comunitarias",
+    "version": "1.0.0",
+    "sdkVersion": "52.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.univille.hortascomunitarias"
+    },
+    "android": {
+      "package": "com.univille.hortascomunitarias",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "web": {},
+    "extra": {
+      "apiUrl": "https://hortas-comunitarias-univille-production.up.railway.app/api/v1",
+      "apiUrlDev": "http://192.168.0.22:8181/api/v1",
+      "mapDefaultLat": -26.2843,
+      "mapDefaultLng": -48.8449
+    }
+  }
+}
