@@ -1,5 +1,10 @@
 # como rodar
 
+SO RODAR O **iniciar.bat**
+
+
+OU
+
 requisitos: windows, powershell e internet no primeiro uso.
 
 na raiz do projeto, rode:

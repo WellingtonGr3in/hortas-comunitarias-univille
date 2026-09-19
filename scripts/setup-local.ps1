@@ -11,6 +11,7 @@ $npm = Join-Path $nodeDirectory 'npm.cmd'
 $mysql = Join-Path $mysqlDirectory 'bin/mysqld.exe'
 $mysqlClient = Join-Path $mysqlDirectory 'bin/mysql.exe'
 $composer = Join-Path $runtime 'composer.phar'
+$backendReady = Join-Path $runtime 'backend-dependencies.ready'
 $frontendReady = Join-Path $runtime 'frontend-dependencies.ready'
 $mysqlData = Join-Path $runtime 'mysql-data'
 $mysqlRootConfig = Join-Path $runtime 'mysql-root.ini'
@@ -18,9 +19,24 @@ $backendEnvironment = Join-Path $projectRoot 'backend/.env'
 
 New-Item -ItemType Directory -Force -Path $runtime | Out-Null
 
+if ($env:OS -ne 'Windows_NT' -or ![Environment]::Is64BitOperatingSystem) {
+    throw 'Este instalador requer Windows 64 bits.'
+}
+
 function Write-Utf8File($path, $content) {
     $encoding = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($path, $content, $encoding)
+}
+
+function Get-Sha256($path) {
+    $stream = [System.IO.File]::OpenRead($path)
+    $algorithm = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString($algorithm.ComputeHash($stream))).Replace('-', '')
+    } finally {
+        $algorithm.Dispose()
+        $stream.Dispose()
+    }
 }
 
 function New-RandomHex($byteCount) {
@@ -30,38 +46,48 @@ function New-RandomHex($byteCount) {
     return -join ($bytes | ForEach-Object { $_.ToString('x2') })
 }
 
-function Install-Archive($name, $url, $sha256, $archivePath, $destination) {
-    if (Test-Path -LiteralPath $destination) { return }
-    Write-Host "Baixando $name (isso ocorre apenas no primeiro uso)..."
-    Invoke-WebRequest -Uri $url -OutFile $archivePath
-    $actualHash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash
-    if ($actualHash -ne $sha256) {
-        Remove-Item -LiteralPath $archivePath -Force
-        throw "O arquivo baixado para $name não passou na verificação de integridade."
+function Get-VerifiedFile($name, $url, $sha256, $destination) {
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        try {
+            [System.IO.File]::Delete($destination)
+            Write-Host "Baixando $name (tentativa $attempt de 3)..."
+            Invoke-WebRequest -Uri $url -OutFile $destination -UseBasicParsing
+            $actualHash = Get-Sha256 $destination
+            if ($actualHash -ne $sha256) { throw 'verificação de integridade recusada' }
+            return
+        } catch {
+            [System.IO.File]::Delete($destination)
+            if ($attempt -eq 3) { throw "Não foi possível baixar $name. Verifique a internet, proxy ou antivírus e tente novamente." }
+            Start-Sleep -Seconds 2
+        }
     }
+}
+
+function Install-Archive($name, $url, $sha256, $archivePath, $destination, $requiredFile) {
+    if (Test-Path -LiteralPath $requiredFile) { return }
+    if (Test-Path -LiteralPath $destination) { [System.IO.Directory]::Delete($destination, $true) }
+    Get-VerifiedFile $name $url $sha256 $archivePath
     Expand-Archive -LiteralPath $archivePath -DestinationPath (Split-Path $destination -Parent) -Force
-    Remove-Item -LiteralPath $archivePath -Force
+    [System.IO.File]::Delete($archivePath)
+    if (!(Test-Path -LiteralPath $requiredFile)) { throw "A extração de $name não foi concluída." }
 }
 
 if (!(Test-Path -LiteralPath $php)) {
     $phpArchive = Join-Path $runtime 'php.zip'
-    Write-Host 'Baixando PHP (isso ocorre apenas no primeiro uso)...'
-    Invoke-WebRequest -Uri 'https://windows.php.net/downloads/releases/php-8.3.33-nts-Win32-vs16-x64.zip' -OutFile $phpArchive
-    $actualHash = (Get-FileHash -LiteralPath $phpArchive -Algorithm SHA256).Hash
-    if ($actualHash -ne '534399107056313246F424ADBBB7937337E40FBBF6AA7BC26287BA9CFD2E4A2A') {
-        Remove-Item -LiteralPath $phpArchive -Force
-        throw 'O arquivo baixado para PHP não passou na verificação de integridade.'
-    }
+    if (Test-Path -LiteralPath $phpDirectory) { [System.IO.Directory]::Delete($phpDirectory, $true) }
+    Get-VerifiedFile 'PHP' 'https://windows.php.net/downloads/releases/php-8.3.33-nts-Win32-vs16-x64.zip' '534399107056313246F424ADBBB7937337E40FBBF6AA7BC26287BA9CFD2E4A2A' $phpArchive
     New-Item -ItemType Directory -Force -Path $phpDirectory | Out-Null
     Expand-Archive -LiteralPath $phpArchive -DestinationPath $phpDirectory -Force
-    Remove-Item -LiteralPath $phpArchive -Force
+    [System.IO.File]::Delete($phpArchive)
+    if (!(Test-Path -LiteralPath $php)) { throw 'A extração do PHP não foi concluída.' }
 }
 
 Install-Archive 'Node.js' `
     'https://nodejs.org/dist/v22.23.2/node-v22.23.2-win-x64.zip' `
     '1177B4137BA5ADAA56354AE40F1080C7450E8AE09CECB47DA459D1C52AC99F97' `
     (Join-Path $runtime 'node.zip') `
-    $nodeDirectory
+    $nodeDirectory `
+    (Join-Path $nodeDirectory 'node.exe')
 
 # Os scripts de instalação do npm chamam `node` pelo PATH.
 $env:Path = "$nodeDirectory;$env:Path"
@@ -70,16 +96,11 @@ Install-Archive 'MySQL' `
     'https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.11-winx64.zip' `
     'A492371D687D2BAB088B0062581144A0044B8964BAEFDF4FAA579292B423D25C' `
     (Join-Path $runtime 'mysql.zip') `
-    $mysqlDirectory
+    $mysqlDirectory `
+    (Join-Path $mysqlDirectory 'bin/mysqld.exe')
 
 if (!(Test-Path -LiteralPath $composer)) {
-    Write-Host 'Baixando Composer...'
-    Invoke-WebRequest -Uri 'https://getcomposer.org/download/2.10.3/composer.phar' -OutFile $composer
-    $actualHash = (Get-FileHash -LiteralPath $composer -Algorithm SHA256).Hash
-    if ($actualHash -ne '7A2D379D5B8FFDAA028580EF26494C36D2FEEF4B178D3DD1473A4DBC5E17C8D6') {
-        Remove-Item -LiteralPath $composer -Force
-        throw 'O Composer baixado não passou na verificação de integridade.'
-    }
+    Get-VerifiedFile 'Composer' 'https://getcomposer.org/download/2.10.3/composer.phar' '7A2D379D5B8FFDAA028580EF26494C36D2FEEF4B178D3DD1473A4DBC5E17C8D6' $composer
 }
 
 $phpConfiguration = @'
@@ -97,18 +118,28 @@ memory_limit=512M
 '@
 Write-Utf8File (Join-Path $phpDirectory 'php.ini') $phpConfiguration
 
-if (!(Test-Path -LiteralPath (Join-Path $projectRoot 'backend/vendor/autoload.php'))) {
+$composerLock = Join-Path $projectRoot 'backend/composer.lock'
+$composerFingerprint = Get-Sha256 $composerLock
+$savedComposerFingerprint = if (Test-Path -LiteralPath $backendReady) { (Get-Content -LiteralPath $backendReady -Raw).Trim() } else { '' }
+if (!(Test-Path -LiteralPath (Join-Path $projectRoot 'backend/vendor/autoload.php')) -or $savedComposerFingerprint -ne $composerFingerprint) {
     Write-Host 'Instalando dependências do backend...'
-    & $php $composer install --working-dir (Join-Path $projectRoot 'backend') --no-interaction --prefer-dist
+    & $php $composer install --working-dir (Join-Path $projectRoot 'backend') --no-interaction --prefer-dist --no-progress
     if ($LASTEXITCODE -ne 0) { throw 'Falha ao instalar as dependências do backend.' }
+    Write-Utf8File $backendReady $composerFingerprint
 }
 
-if (!(Test-Path -LiteralPath $frontendReady)) {
+$packageLock = Join-Path $projectRoot 'frontend/package-lock.json'
+$packageFingerprint = Get-Sha256 $packageLock
+$savedPackageFingerprint = if (Test-Path -LiteralPath $frontendReady) { (Get-Content -LiteralPath $frontendReady -Raw).Trim() } else { '' }
+if (!(Test-Path -LiteralPath (Join-Path $projectRoot 'frontend/node_modules/@vue/cli-service/bin/vue-cli-service.js')) -or $savedPackageFingerprint -ne $packageFingerprint) {
     Write-Host 'Instalando dependências do frontend...'
+    # O binário do Cypress só é necessário para testes e seu download costuma
+    # ser bloqueado por proxy ou antivírus. O pacote JS continua instalado.
+    $env:CYPRESS_INSTALL_BINARY = '0'
     Push-Location (Join-Path $projectRoot 'frontend')
-    try { & $npm ci } finally { Pop-Location }
+    try { & $npm ci --no-audit --no-fund --loglevel=error } finally { Pop-Location }
     if ($LASTEXITCODE -ne 0) { throw 'Falha ao instalar as dependências do frontend.' }
-    Write-Utf8File $frontendReady 'ok'
+    Write-Utf8File $frontendReady $packageFingerprint
 }
 
 $newDatabase = !(Test-Path -LiteralPath (Join-Path $mysqlData 'mysql'))

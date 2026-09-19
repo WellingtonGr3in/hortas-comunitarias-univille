@@ -32,5 +32,28 @@ Start-LocalService 'mysql' $mysql @('--no-defaults', "--basedir=`"$runtime/mysql
 if ($LASTEXITCODE -ne 0) { throw 'Falha nas migrations. O backend não foi iniciado.' }
 Start-LocalService 'backend' $php @('-S', '127.0.0.1:8181', '-t', 'public', 'public/index.php') "$projectRoot/backend" 8181
 Start-LocalService 'frontend' $node @('node_modules/@vue/cli-service/bin/vue-cli-service.js', 'serve', '--host', '127.0.0.1') "$projectRoot/frontend" 3000
+
+Write-Host 'Validando o sistema...'
+$backendReady = $false
+for ($attempt = 0; $attempt -lt 120; $attempt++) {
+    try {
+        $body = @{email='admin@email.com'; senha='admin'} | ConvertTo-Json
+        $login = Invoke-RestMethod -Uri 'http://127.0.0.1:8181/api/v1/sessoes/login' -Method Post -ContentType 'application/json' -Body $body -TimeoutSec 5
+        if ($login.token) { $backendReady = $true; break }
+    } catch {}
+    Start-Sleep -Seconds 1
+}
+if (!$backendReady) { throw 'O backend não respondeu corretamente. Consulte .runtime/backend-error.log.' }
+
+$frontendReady = $false
+for ($attempt = 0; $attempt -lt 180; $attempt++) {
+    try {
+        $response = Invoke-WebRequest -Uri 'http://127.0.0.1:3000' -UseBasicParsing -TimeoutSec 5
+        if ($response.StatusCode -eq 200) { $frontendReady = $true; break }
+    } catch {}
+    Start-Sleep -Seconds 1
+}
+if (!$frontendReady) { throw 'O frontend não respondeu corretamente. Consulte .runtime/frontend-error.log.' }
+
 Write-Host 'Projeto disponível em http://localhost:3000'
 Write-Host 'Demonstração: admin@email.com / admin'
