@@ -21,3 +21,7 @@ para encerrar:
 ```
 
 o banco fica salvo para o próximo uso.
+ 
+--------------------------------------------
+TUDO SEMPRE DENTRO DA PASTA RAIZ DO PROJETO, PODE ABRIR USAR O TERMINAL DA PROPRIA IDE
+--------------------------------------------
