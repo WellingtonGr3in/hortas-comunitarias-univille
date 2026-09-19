@@ -11,6 +11,7 @@ $npm = Join-Path $nodeDirectory 'npm.cmd'
 $mysql = Join-Path $mysqlDirectory 'bin/mysqld.exe'
 $mysqlClient = Join-Path $mysqlDirectory 'bin/mysql.exe'
 $composer = Join-Path $runtime 'composer.phar'
+$frontendReady = Join-Path $runtime 'frontend-dependencies.ready'
 $mysqlData = Join-Path $runtime 'mysql-data'
 $mysqlRootConfig = Join-Path $runtime 'mysql-root.ini'
 $backendEnvironment = Join-Path $projectRoot 'backend/.env'
@@ -62,6 +63,9 @@ Install-Archive 'Node.js' `
     (Join-Path $runtime 'node.zip') `
     $nodeDirectory
 
+# Os scripts de instalação do npm chamam `node` pelo PATH.
+$env:Path = "$nodeDirectory;$env:Path"
+
 Install-Archive 'MySQL' `
     'https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.11-winx64.zip' `
     'A492371D687D2BAB088B0062581144A0044B8964BAEFDF4FAA579292B423D25C' `
@@ -99,11 +103,12 @@ if (!(Test-Path -LiteralPath (Join-Path $projectRoot 'backend/vendor/autoload.ph
     if ($LASTEXITCODE -ne 0) { throw 'Falha ao instalar as dependências do backend.' }
 }
 
-if (!(Test-Path -LiteralPath (Join-Path $projectRoot 'frontend/node_modules/@vue/cli-service/bin/vue-cli-service.js'))) {
+if (!(Test-Path -LiteralPath $frontendReady)) {
     Write-Host 'Instalando dependências do frontend...'
     Push-Location (Join-Path $projectRoot 'frontend')
     try { & $npm ci } finally { Pop-Location }
     if ($LASTEXITCODE -ne 0) { throw 'Falha ao instalar as dependências do frontend.' }
+    Write-Utf8File $frontendReady 'ok'
 }
 
 $newDatabase = !(Test-Path -LiteralPath (Join-Path $mysqlData 'mysql'))
