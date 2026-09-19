@@ -29,7 +29,7 @@ no primeiro uso ele baixa e configura tudo. depois, acesse:
 para encerrar:
 
 ```powershell
-.\scripts\stop-local.ps1
+powershell.exe -executionpolicy bypass -file .\scripts\stop-local.ps1
 ```
 
 o banco fica salvo para o próximo uso.
