@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Documento histórico.** Arquivado em 15/10/2026 (estava em `mobile/RESUMO_CORRECOES.md`). Pode conter credenciais, URLs e instruções que não valem mais. A organização atual da documentação está no [DOCUMENTACAO.md](../../../DOCUMENTACAO.md).
+> Os arquivos `CHANGELOG.md` citados abaixo nunca foram adicionados ao repositório.
+
 # 🎯 RESUMO EXECUTIVO - Correções de Autenticação
 
 ## ✅ O que foi corrigido:

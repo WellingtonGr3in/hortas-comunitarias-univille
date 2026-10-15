@@ -1,3 +1,6 @@
+> [!NOTE]
+> **Documento histórico.** Arquivado em 15/10/2026 (estava em `mobile/TROUBLESHOOTING_INSTALL.md`). Pode conter credenciais, URLs e instruções que não valem mais. A organização atual da documentação está no [DOCUMENTACAO.md](../../../DOCUMENTACAO.md).
+
 # 🔧 Troubleshooting - Instalação de Dependências
 
 ## ❌ Problema: Erro de Rede ao Instalar Picker
@@ -136,7 +139,6 @@ import { Picker } from '@react-native-picker/picker';
 import { Modal, FlatList, TouchableOpacity } from 'react-native';
 
 // Criar dropdown manual (mais trabalhoso, mas funciona)
-// Ver exemplo completo em mobile/PICKER_ALTERNATIVE.md
 ```
 
 Mas **recomendo fortemente** tentar as soluções 1-4 primeiro, pois o Picker é muito mais simples.

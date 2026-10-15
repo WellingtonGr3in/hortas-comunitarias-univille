@@ -1,3 +1,6 @@
+> [!NOTE]
+> **Documento histórico.** Arquivado em 15/10/2026 (estava em `mobile/MELHORIAS_RAPIDAS.md`). Pode conter credenciais, URLs e instruções que não valem mais. A organização atual da documentação está no [DOCUMENTACAO.md](../../../DOCUMENTACAO.md).
+
 # 🔧 MELHORIAS E CORREÇÕES SUGERIDAS
 ## Para uma apresentação perfeita
 

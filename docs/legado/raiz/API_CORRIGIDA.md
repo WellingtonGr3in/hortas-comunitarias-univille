@@ -1,3 +1,6 @@
+> [!NOTE]
+> **Documento histórico.** Arquivado em 15/10/2026 (estava em `API_CORRIGIDA.md`). Pode conter credenciais, URLs e instruções que não valem mais. A organização atual da documentação está no [DOCUMENTACAO.md](../../../DOCUMENTACAO.md).
+
 # 🎉 API BACKEND FUNCIONANDO!
 
 ## ✅ Status

@@ -9,6 +9,9 @@ Esse fork do [repositório original](https://github.com/thiagohome2/hortas-comun
 > [!CAUTION]
 > Cabe a cada grupo atualizar esse e outros `README.md` relevantes a sua contribuição no projeto. O mesmo vale para as Issues. Não nos responsabilizamos por informações faltantes decorrentes do não preenchimento. A manutenção do repositório é da responsabilidade de todos.
 
+> [!TIP]
+> Não sabe por onde começar? O [DOCUMENTACAO.md](DOCUMENTACAO.md) lista todos os documentos do projeto, as credenciais de teste que funcionam e o endereço certo da API. O [Manual do Usuário](docs/MANUAL_USUARIO.md) explica o sistema para quem vai usá-lo.
+
 ## 🟩 Backend
 
 > **Status**: MVP Completo e Funcional ✅ 

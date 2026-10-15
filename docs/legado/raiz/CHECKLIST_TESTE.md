@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Documento histórico.** Arquivado em 15/10/2026 (estava em `CHECKLIST_TESTE.md`). Pode conter credenciais, URLs e instruções que não valem mais. A organização atual da documentação está no [DOCUMENTACAO.md](../../../DOCUMENTACAO.md).
+> Os casos de teste daqui ainda servem de base para um plano de testes novo.
+
 # ✅ Checklist de Testes - App Mobile
 
 ## 🎯 Objetivo

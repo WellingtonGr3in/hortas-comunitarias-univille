@@ -1,3 +1,6 @@
+> [!NOTE]
+> **Documento histórico.** Arquivado em 15/10/2026 (estava em `mobile/EXPLICACAO_LOGS.md`). Pode conter credenciais, URLs e instruções que não valem mais. A organização atual da documentação está no [DOCUMENTACAO.md](../../../DOCUMENTACAO.md).
+
 # 📚 EXPLICAÇÃO DIDÁTICA - O Que Aconteceu no Seu Teste
 
 **Data**: 5 de Novembro de 2025  

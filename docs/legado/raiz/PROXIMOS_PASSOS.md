@@ -1,3 +1,6 @@
+> [!NOTE]
+> **Documento histórico.** Arquivado em 15/10/2026 (estava em `PROXIMOS_PASSOS.md`). Pode conter credenciais, URLs e instruções que não valem mais. A organização atual da documentação está no [DOCUMENTACAO.md](../../../DOCUMENTACAO.md).
+
 # 🚀 Próximos Passos - Deploy Mobile
 
 ## ✅ Status Atual
@@ -240,7 +243,7 @@ Se encontrar problemas:
 
 1. **Verifique a documentação**:
    - [IMPLEMENTACOES_MOBILE_FASE1.md](IMPLEMENTACOES_MOBILE_FASE1.md)
-   - [mobile/INSTALL_DEPENDENCIES.md](mobile/INSTALL_DEPENDENCIES.md)
+   - [mobile/INSTALL_DEPENDENCIES.md](../mobile/INSTALL_DEPENDENCIES.md)
 
 2. **Logs úteis**:
    ```bash

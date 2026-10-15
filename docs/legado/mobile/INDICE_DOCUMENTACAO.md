@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Documento histórico.** Arquivado em 15/10/2026 (estava em `mobile/INDICE_DOCUMENTACAO.md`). Pode conter credenciais, URLs e instruções que não valem mais. A organização atual da documentação está no [DOCUMENTACAO.md](../../../DOCUMENTACAO.md).
+> Os arquivos `RESUMO_FINAL.md`, `PLANO_APRESENTACAO.md`, `GUIA_5MIN.md`, `TAREFA.md` citados abaixo nunca foram adicionados ao repositório.
+
 # 📚 ÍNDICE DA DOCUMENTAÇÃO COMPLETA
 
 ## Documentos Criados para sua Apresentação

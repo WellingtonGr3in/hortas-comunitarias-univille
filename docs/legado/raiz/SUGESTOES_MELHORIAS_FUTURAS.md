@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Documento histórico.** Arquivado em 15/10/2026 (estava em `SUGESTOES_MELHORIAS_FUTURAS.md`). Pode conter credenciais, URLs e instruções que não valem mais. A organização atual da documentação está no [DOCUMENTACAO.md](../../../DOCUMENTACAO.md).
+> As sugestões que ainda fazem sentido podem entrar no backlog do projeto.
+
 # 🚀 Sugestões de Melhorias Futuras
 
 Este documento apresenta uma lista abrangente de melhorias e funcionalidades que podem ser implementadas em versões futuras do sistema de gestão de hortas comunitárias, visando aprimorar a experiência do usuário, segurança, eficiência operacional e alcance do projeto.
@@ -320,7 +324,7 @@ Este documento apresenta uma lista abrangente de melhorias e funcionalidades que
 ### Documentação Técnica
 
 - [Documentação da API](https://lvcaspacifico.github.io/hortas-comunitarias-univille/)
-- [Guia de Desenvolvimento](DEVELOPMENT.md)
+- [Guia de Desenvolvimento](../../../DEVELOPMENT.md)
 - [Próximos Passos](PROXIMOS_PASSOS.md)
 
 ### Repositórios Relacionados

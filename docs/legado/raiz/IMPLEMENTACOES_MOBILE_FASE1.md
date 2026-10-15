@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Documento histórico.** Arquivado em 15/10/2026 (estava em `IMPLEMENTACOES_MOBILE_FASE1.md`). Pode conter credenciais, URLs e instruções que não valem mais. A organização atual da documentação está no [DOCUMENTACAO.md](../../../DOCUMENTACAO.md).
+> Os arquivos `COMPARACAO_FRONTEND_MOBILE.md` citados abaixo nunca foram adicionados ao repositório.
+
 # 🚀 Implementações Mobile - Fase 1 (Completa)
 
 ## ✅ O Que Foi Implementado
