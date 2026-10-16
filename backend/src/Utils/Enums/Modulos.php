@@ -23,4 +23,7 @@ enum Modulos: int
     case RECURSOS_DO_PLANO = 16;
     case CHAVES = 17;
     case FILA_DE_USUARIO = 18;
+    // 19 a 21 já são usados no seed (permissões do usuário, canteiristas, canteiristas e canteiros).
+    case ITENS_DO_INVENTARIO = 22;
+    case MOVIMENTACOES_DO_INVENTARIO = 23;
 }

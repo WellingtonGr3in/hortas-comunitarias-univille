@@ -85,8 +85,21 @@ class RoutePermissionMap
         '/financeiro-da-horta/{uuid} PUT'                           => ['financeiro_da_horta_put'],
         '/financeiro-da-horta/{uuid} DELETE'                        => ['financeiro_da_horta_delete'],
 
+        // ==== Inventário ====
+        '/itens-do-inventario GET'                                  => ['itens_do_inventario_get'],
+        '/itens-do-inventario/{uuid} GET'                           => ['itens_do_inventario_get_uuid'],
+        '/itens-do-inventario/associacao/{uuid} GET'                => ['itens_do_inventario_get_associacao'],
+        '/itens-do-inventario/horta/{uuid} GET'                     => ['itens_do_inventario_get_horta'],
+        '/itens-do-inventario POST'                                 => ['itens_do_inventario_post'],
+        '/itens-do-inventario/{uuid} PUT'                           => ['itens_do_inventario_put'],
+        '/itens-do-inventario/{uuid} DELETE'                        => ['itens_do_inventario_delete'],
+        '/movimentacoes-do-inventario GET'                          => ['movimentacoes_do_inventario_get'],
+        '/movimentacoes-do-inventario/{uuid} GET'                   => ['movimentacoes_do_inventario_get_uuid'],
+        '/movimentacoes-do-inventario/item/{uuid} GET'              => ['movimentacoes_do_inventario_get_item'],
+        '/movimentacoes-do-inventario POST'                         => ['movimentacoes_do_inventario_post'],
+
         // ==== Hortas ====
-        '/hortas GET'                                               => ['hortas_get'],
+        '/hortas GET'                                              => ['hortas_get'],
         '/hortas/{uuid} GET'                                        => ['hortas_get_uuid'],
         '/hortas POST'                                              => ['hortas_post'],
         '/hortas/{uuid} PUT'                                        => ['hortas_put'],

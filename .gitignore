@@ -51,6 +51,16 @@ tmp/
 .expo/
 .expo-shared/
 
+# Credenciais e segredos
+Secrets/
+**/Secrets/
+CREDENCIAIS.md
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+
 # Backend específico
 backend/.env
 backend/logs/

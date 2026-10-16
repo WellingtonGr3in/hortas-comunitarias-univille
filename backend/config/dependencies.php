@@ -80,6 +80,9 @@
 
         $filaDeUsuarioBindings = require __DIR__ . '/fila_de_usuario_bindings.php';
         $filaDeUsuarioBindings($containerBuilder);
+
+        $inventarioBindings = require __DIR__ . '/inventario_bindings.php';
+        $inventarioBindings($containerBuilder);
     }
 
 ?>

@@ -183,32 +183,8 @@ export default {
     ...mapState('auth', ['user']),
     
     isAdmin() {
-      // Verifica se é administrador
-      console.log('🔍 Verificando isAdmin:', {
-        user: this.user,
-        cargo: this.user?.cargo,
-        cargo_uuid: this.user?.cargo_uuid
-      })
-      
-      if (!this.user) return false
-
-      if (this.user.cargo_slug) {
-        return this.user.cargo_slug.startsWith('admin')
-      }
-      
-      // Verifica pelo cargo (nome ou slug)
-      if (this.user.cargo) {
-        const cargoLower = this.user.cargo.toLowerCase()
-        if (cargoLower.includes('admin') || 
-            cargoLower.includes('administração') ||
-            cargoLower.includes('plataforma')) {
-          return true
-        }
-      }
-      
-      // Fallback: se não tem cargo definido mas tem cargo_uuid, assume como admin temporariamente
-      // (Isso permitirá que o admin veja a interface enquanto ajustamos o backend)
-      return true
+      // Sem cargo identificado, o usuário vê o feed comum, nunca a tela de gestão.
+      return !!this.user?.cargo_slug?.startsWith('admin')
     },
     
     notificacoes() { 

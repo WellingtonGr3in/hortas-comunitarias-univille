@@ -43,6 +43,9 @@
           <li class="nav-item">
             <router-link to="/dependentes" class="nav-link">Dependentes</router-link>
           </li>
+          <li v-if="isAdmin" class="nav-item">
+            <router-link to="/inventario" class="nav-link">Inventário</router-link>
+          </li>
           <li class="nav-item">
             <router-link to="/notificacoes" class="nav-link">Notificações</router-link>
           </li>
@@ -74,7 +77,9 @@ export default {
     
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
-    
+    // O inventário só existe para os cargos de administração.
+    const isAdmin = computed(() => !!currentUser.value?.cargo_slug?.startsWith('admin'))
+
     const handleLogout = () => {
       store.dispatch('auth/logout')
       router.push('/login')
@@ -83,6 +88,7 @@ export default {
     return {
       isAuthenticated,
       currentUser,
+      isAdmin,
       handleLogout
     }
   }
