@@ -32,6 +32,9 @@
             <router-link to="/canteiristas" class="nav-link">Canteiristas</router-link>
           </li>
           <li class="nav-item">
+            <router-link to="/usuarios" class="nav-link">Usuários</router-link>
+          </li>
+          <li class="nav-item">
             <router-link to="/pagamentos" class="nav-link">Pagamentos</router-link>
           </li>
           <li v-if="isAdminPlataforma" class="nav-item">
