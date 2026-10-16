@@ -114,13 +114,13 @@ const routes = [
     path: '/inventario',
     name: 'InventarioList',
     component: () => import('@/views/Inventario/List.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'] }
   },
   {
     path: '/inventario/:id',
     name: 'InventarioDetalhe',
     component: () => import('@/views/Inventario/Detalhe.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'] }
   },
   {
     path: '/planos',

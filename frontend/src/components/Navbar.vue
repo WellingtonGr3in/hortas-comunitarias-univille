@@ -49,7 +49,7 @@
           <li class="nav-item">
             <router-link to="/dependentes" class="nav-link">Dependentes</router-link>
           </li>
-          <li v-if="isAdmin" class="nav-item">
+          <li v-if="podeVerInventario" class="nav-item">
             <router-link to="/inventario" class="nav-link">Inventário</router-link>
           </li>
           <li class="nav-item">
@@ -86,6 +86,8 @@ export default {
     const cargoSlug = computed(() => store.getters['auth/cargoSlug'])
     const isAdminPlataforma = computed(() => cargoSlug.value === 'admin_plataforma')
     const isAdmin = computed(() => ['admin_plataforma', 'admin_associacao_geral'].includes(cargoSlug.value))
+    // O inventário também é gerenciado pelo admin da horta (só a horta dele).
+    const podeVerInventario = computed(() => isAdmin.value || cargoSlug.value === 'admin_horta_geral')
 
     const handleLogout = () => {
       store.dispatch('auth/logout')
@@ -97,6 +99,7 @@ export default {
       currentUser,
       isAdminPlataforma,
       isAdmin,
+      podeVerInventario,
       handleLogout
     }
   }
