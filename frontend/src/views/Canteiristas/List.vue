@@ -443,6 +443,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import hortasService from '@/services/hortas.service'
 import canteirosService from '@/services/canteiros.service'
+import { formatarCpf } from '@/utils/format'
 
 export default {
   name: 'CanteiristasList',
@@ -515,13 +516,6 @@ export default {
     const nomeHorta = (uuid) => {
       if (!uuid) return null
       return hortas.value.find(h => h.id === uuid)?.nome || null
-    }
-
-    const formatarCpf = (cpf) => {
-      if (!cpf) return '-'
-      const s = cpf.replace(/\D/g, '')
-      if (s.length !== 11) return cpf
-      return s.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
     }
 
     const formatarData = (data) => {
