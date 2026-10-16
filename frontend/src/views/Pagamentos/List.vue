@@ -2,7 +2,7 @@
   <div class="pagamentos-list">
     <div class="header">
       <h2>Pagamentos</h2>
-      <button @click="handleCreate" class="btn btn-primary">
+      <button v-if="podeGerenciar" @click="handleCreate" class="btn btn-primary">
         + Novo Pagamento
       </button>
     </div>
@@ -22,7 +22,7 @@
 
     <div v-else-if="pagamentos.length === 0" class="empty-state">
       <p>Nenhum pagamento cadastrado.</p>
-      <button @click="handleCreate" class="btn btn-primary">
+      <button v-if="podeGerenciar" @click="handleCreate" class="btn btn-primary">
         Cadastrar Primeiro Pagamento
       </button>
     </div>
@@ -37,7 +37,7 @@
             <th>Forma</th>
             <th>Data</th>
             <th>Observação</th>
-            <th>Ações</th>
+            <th v-if="podeGerenciar">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -52,7 +52,7 @@
             </td>
             <td>{{ formatDate(pagamento.data_pagamento) }}</td>
             <td>{{ pagamento.observacao || '—' }}</td>
-            <td class="actions">
+            <td v-if="podeGerenciar" class="actions">
               <button @click="handleEdit(pagamento.id)" class="btn-icon" title="Editar">
                 ✏️
               </button>
@@ -80,6 +80,11 @@ export default {
     const loading = ref(true)
 
     const pagamentos = computed(() => store.getters['pagamentos/allPagamentos'])
+
+    // Só os administradores lançam, editam e excluem; o canteirista apenas consulta os próprios pagamentos.
+    const podeGerenciar = computed(() =>
+      ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'].includes(store.getters['auth/cargoSlug'])
+    )
 
     const totalPaid = computed(() => {
       return pagamentos.value.reduce((sum, p) => sum + (parseFloat(p.valor) || 0), 0)
@@ -133,6 +138,7 @@ export default {
     }
 
     return {
+      podeGerenciar,
       loading,
       pagamentos,
       totalPaid,

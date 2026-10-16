@@ -15,6 +15,26 @@ class PagamentoRepository
             ->get();
     }
 
+    // Pagamentos de canteiristas das hortas informadas.
+    public function findAllDasHortas(array $hortaUuids)
+    {
+        return PagamentoModel::with('Canteirista')
+            ->where('excluido', 0)
+            ->whereHas('Canteirista', fn ($q) => $q->whereIn('horta_uuid', $hortaUuids))
+            ->orderBy('data_pagamento', 'desc')
+            ->get();
+    }
+
+    // Pagamentos do canteirista ligado a este usuário.
+    public function findAllDoUsuario(string $usuarioUuid)
+    {
+        return PagamentoModel::with('Canteirista')
+            ->where('excluido', 0)
+            ->whereHas('Canteirista', fn ($q) => $q->where('usuario_uuid', $usuarioUuid))
+            ->orderBy('data_pagamento', 'desc')
+            ->get();
+    }
+
     public function findByUuid(string $uuid)
     {
         return PagamentoModel::with('Canteirista')

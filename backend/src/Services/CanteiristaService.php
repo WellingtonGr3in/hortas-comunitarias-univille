@@ -95,6 +95,10 @@ class CanteiristaService
             throw new Exception("Horta não encontrada");
         }
 
+        // O usuário precisa saber a horta e a associação: elas vão no token e definem o que ele enxerga.
+        $usuarioData['horta_uuid'] = $horta->uuid;
+        $usuarioData['associacao_uuid'] = $horta->associacao_vinculada_uuid;
+
         // Validar dados do usuário
         if (empty($usuarioData['email'])) {
             throw new Exception("Email é obrigatório para criar o usuário");

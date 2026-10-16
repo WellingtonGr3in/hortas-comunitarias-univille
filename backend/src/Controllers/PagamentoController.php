@@ -19,7 +19,7 @@ class PagamentoController
     public function list(Request $request, Response $response): Response
     {
         try {
-            $pagamentos = $this->service->findAll();
+            $pagamentos = $this->service->findAll($this->payloadUsuarioLogado($request));
             
             $formatted = $pagamentos->map(function ($p) {
                 return [
@@ -40,6 +40,12 @@ class PagamentoController
                 'data' => $formatted
             ]));
             return $response->withHeader('Content-Type', 'application/json');
+        } catch (\DomainException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -52,7 +58,7 @@ class PagamentoController
     public function get(Request $request, Response $response, array $args): Response
     {
         try {
-            $pagamento = $this->service->findByUuid($args['id']);
+            $pagamento = $this->service->findByUuid($args['id'], $this->payloadUsuarioLogado($request));
             
             $data = [
                 'id' => $pagamento->uuid,
@@ -77,6 +83,12 @@ class PagamentoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        } catch (\DomainException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -90,7 +102,7 @@ class PagamentoController
     {
         try {
             $data = $request->getParsedBody();
-            $pagamento = $this->service->create($data);
+            $pagamento = $this->service->create($data, $this->payloadUsuarioLogado($request));
 
             $responseData = [
                 'id' => $pagamento->uuid,
@@ -113,6 +125,12 @@ class PagamentoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        } catch (\DomainException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -126,7 +144,7 @@ class PagamentoController
     {
         try {
             $data = $request->getParsedBody();
-            $pagamento = $this->service->update($args['id'], $data);
+            $pagamento = $this->service->update($args['id'], $data, $this->payloadUsuarioLogado($request));
 
             $responseData = [
                 'id' => $pagamento->uuid,
@@ -149,6 +167,12 @@ class PagamentoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        } catch (\DomainException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -161,7 +185,7 @@ class PagamentoController
     public function delete(Request $request, Response $response, array $args): Response
     {
         try {
-            $this->service->delete($args['id']);
+            $this->service->delete($args['id'], $this->payloadUsuarioLogado($request));
             
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -174,6 +198,12 @@ class PagamentoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        } catch (\DomainException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -182,5 +212,14 @@ class PagamentoController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
     }
-}
 
+    private function payloadUsuarioLogado(Request $request): array
+    {
+        return [
+            'usuario_uuid' => $request->getAttribute('usuario_uuid'),
+            'cargo_uuid' => $request->getAttribute('cargo_uuid'),
+            'associacao_uuid' => $request->getAttribute('associacao_uuid'),
+            'horta_uuid' => $request->getAttribute('horta_uuid'),
+        ];
+    }
+}

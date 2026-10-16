@@ -90,13 +90,13 @@ const routes = [
     path: '/pagamentos/criar',
     name: 'PagamentosCreate',
     component: () => import('@/views/Pagamentos/Create.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'] }
   },
   {
     path: '/pagamentos/:id/editar',
     name: 'PagamentosEdit',
     component: () => import('@/views/Pagamentos/Edit.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'] }
   },
   {
     path: '/mensalidades',
