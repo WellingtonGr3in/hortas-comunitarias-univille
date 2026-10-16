@@ -81,7 +81,7 @@
               <select id="assoc-associacao" v-model="form.associacao_uuid" class="form-select" required @change="form.usuario_uuid = ''">
                 <option value="" disabled>Selecione</option>
                 <option v-for="a in listaAssociacoes" :key="a.uuid" :value="a.uuid">
-                  {{ a.nome_fantasia || a.razao_social }}
+                  {{ a.nome }}
                 </option>
               </select>
             </div>
@@ -186,7 +186,14 @@ export default {
       ])
       if (resUsuarios.status === 'fulfilled') usuarios.value = indexarPorUuid(resUsuarios.value.data)
       if (resCargos.status === 'fulfilled') cargos.value = indexarPorUuid(resCargos.value.data)
-      if (resAssociacoes.status === 'fulfilled') associacoes.value = indexarPorUuid(resAssociacoes.value.data)
+      // /associacoes devolve já formatado ({ id, nome }), diferente das outras rotas.
+      if (resAssociacoes.status === 'fulfilled') {
+        associacoes.value = indexarPorUuid((resAssociacoes.value.data || []).map(a => ({
+          ...a,
+          uuid: a.uuid || a.id,
+          nome: a.nome || a.nome_fantasia || a.razao_social
+        })))
+      }
     }
 
     const nomeUsuario = uuid => {
@@ -195,7 +202,7 @@ export default {
     }
     const nomeAssociacao = uuid => {
       const a = associacoes.value[uuid]
-      return a ? (a.nome_fantasia || a.razao_social) : '—'
+      return a ? a.nome : '—'
     }
     const listaAssociacoes = computed(() => Object.values(associacoes.value))
 
