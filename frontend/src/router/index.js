@@ -102,7 +102,13 @@ const routes = [
     path: '/mensalidades',
     name: 'MensalidadesList',
     component: () => import('@/views/Mensalidades/List.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral'] }
+  },
+  {
+    path: '/mensalidades-associacao',
+    name: 'MensalidadesAssociacaoList',
+    component: () => import('@/views/MensalidadesAssociacao/List.vue'),
+    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral'] }
   },
   {
     path: '/inventario',
@@ -115,6 +121,12 @@ const routes = [
     name: 'InventarioDetalhe',
     component: () => import('@/views/Inventario/Detalhe.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/planos',
+    name: 'PlanosList',
+    component: () => import('@/views/Planos/List.vue'),
+    meta: { requiresAuth: true, roles: ['admin_plataforma'] }
   },
   {
     path: '/dependentes',
@@ -177,9 +189,12 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   let authenticated = false
+  let cargoSlug = null
   try {
     const token = localStorage.getItem('token')
-    authenticated = !!token && jwtDecode(token).exp * 1000 > Date.now()
+    const decoded = token ? jwtDecode(token) : null
+    authenticated = !!decoded && decoded.exp * 1000 > Date.now()
+    cargoSlug = decoded?.cargo_slug || null
   } catch { /* Token inválido: voltar ao login. */ }
   if (!authenticated) {
     localStorage.removeItem('token')
@@ -187,6 +202,8 @@ router.beforeEach((to, from, next) => {
   }
   if (to.meta.requiresAuth && !authenticated) return next('/login')
   if (to.meta.guest && authenticated) return next('/')
+  // Rotas restritas por cargo (cargo_slug do JWT)
+  if (to.meta.roles && !to.meta.roles.includes(cargoSlug)) return next('/')
   next()
 })
 

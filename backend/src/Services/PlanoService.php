@@ -83,11 +83,11 @@ class PlanoService
             throw new Exception("Permissão de cargo 0 necessária | create");
         }
 
-        v::key('codigo', v::stringType()->notEmpty())
+        v::key('codigo', v::intVal()->min(0))
            ->key('valor_em_centavos', v::intType()->positive())
           ->key('slug', v::stringType()->notEmpty())
           ->key('nome', v::stringType()->notEmpty())
-          ->key('descricao', v::stringType()->notEmpty())
+          ->key('descricao', v::optional(v::stringType()), false)
           ->check($data);
 
         $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
@@ -110,14 +110,14 @@ class PlanoService
             throw new Exception('Plano não encontrado');
         }
 
-        v::key('codigo', v::stringType()->notEmpty(), false)
+        v::key('codigo', v::intVal()->min(0), false)
           ->key('valor_em_centavos', v::intType()->positive(), false)
           ->key('slug', v::stringType()->notEmpty(), false)
           ->key('nome', v::stringType()->notEmpty(), false)
-          ->key('descricao', v::stringType()->notEmpty(), false)
+          ->key('descricao', v::optional(v::stringType()), false)
           ->check($data);
 
-        $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
+        $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao', 'excluido'];
         foreach ($guarded as $g) unset($data[$g]);
 
         $data['usuario_alterador_uuid'] = $payloadUsuarioLogado['usuario_uuid'];
@@ -145,6 +145,6 @@ class PlanoService
 
     private function isCargoAdminPlataforma(array $payloadUsuarioLogado): bool
     {
-        return $this->cargoService->findByUuid($payloadUsuarioLogado['cargo_uuid'], $payloadUsuarioLogado)->slug === "admin_plataforma";
+        return $this->cargoService->findByUuidInternal($payloadUsuarioLogado['cargo_uuid'])->slug === "admin_plataforma";
     }
 }

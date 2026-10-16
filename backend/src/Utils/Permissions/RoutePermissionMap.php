@@ -99,7 +99,7 @@ class RoutePermissionMap
         '/movimentacoes-do-inventario POST'                         => ['movimentacoes_do_inventario_post'],
 
         // ==== Hortas ====
-        '/hortas GET'                                              => ['hortas_get'],
+        '/hortas GET'                                               => ['hortas_get'],
         '/hortas/{uuid} GET'                                        => ['hortas_get_uuid'],
         '/hortas POST'                                              => ['hortas_post'],
         '/hortas/{uuid} PUT'                                        => ['hortas_put'],

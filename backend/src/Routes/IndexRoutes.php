@@ -78,7 +78,7 @@ return function (App $app) {
         $chavesRoutes($group);
 
         $filaDeUsuarioRoutes = require __DIR__ . '/FilaDeUsuarioRoutes.php';
-        $filaDeUsuarioRoutes($group);
+        $filaDeUsuarioRoutes($group); 
 
         $itemDoInventarioRoutes = require __DIR__ . '/ItemDoInventarioRoutes.php';
         $itemDoInventarioRoutes($group);
