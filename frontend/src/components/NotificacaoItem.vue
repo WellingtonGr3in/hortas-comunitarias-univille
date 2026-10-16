@@ -15,11 +15,7 @@
       </div>
       <div class="text-end small text-muted">
         <div>{{ timeAgo }}</div>
-        <div v-if="!notificacao.lida" class="mt-2">
-          <button class="btn btn-sm btn-primary" @click.prevent="markAsRead">
-            Marcar como lida
-          </button>
-        </div>
+        <div v-if="!notificacao.lida" class="mt-2"><a href="#" @click.prevent="markAsRead">Marcar como lida</a></div>
       </div>
     </div>
   </div>

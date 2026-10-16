@@ -131,4 +131,4 @@ Se viu isso, funcionou! 🚀
 
 ---
 
-**Próximo passo**: Configurar a API backend com ngrok (veja [DICAS.md](../docs/legado/mobile/DICAS.md))
+**Próximo passo**: Configurar a API backend com ngrok (veja DICAS.md)

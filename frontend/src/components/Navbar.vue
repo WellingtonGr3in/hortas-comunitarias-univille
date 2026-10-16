@@ -34,8 +34,14 @@
           <li class="nav-item">
             <router-link to="/pagamentos" class="nav-link">Pagamentos</router-link>
           </li>
-          <li class="nav-item">
+          <li v-if="isAdminPlataforma" class="nav-item">
+            <router-link to="/planos" class="nav-link">Planos</router-link>
+          </li>
+          <li v-if="isAdmin" class="nav-item">
             <router-link to="/mensalidades" class="nav-link">Mensalidades</router-link>
+          </li>
+          <li v-if="isAdmin" class="nav-item">
+            <router-link to="/mensalidades-associacao" class="nav-link">Mensalidades da associação</router-link>
           </li>
           <li class="nav-item">
             <router-link to="/dependentes" class="nav-link">Dependentes</router-link>
@@ -74,8 +80,9 @@ export default {
     
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
-    // O inventário só existe para os cargos de administração.
-    const isAdmin = computed(() => !!currentUser.value?.cargo_slug?.startsWith('admin'))
+    const cargoSlug = computed(() => store.getters['auth/cargoSlug'])
+    const isAdminPlataforma = computed(() => cargoSlug.value === 'admin_plataforma')
+    const isAdmin = computed(() => ['admin_plataforma', 'admin_associacao_geral'].includes(cargoSlug.value))
 
     const handleLogout = () => {
       store.dispatch('auth/logout')
@@ -85,6 +92,7 @@ export default {
     return {
       isAuthenticated,
       currentUser,
+      isAdminPlataforma,
       isAdmin,
       handleLogout
     }

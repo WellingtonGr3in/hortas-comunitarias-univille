@@ -17,7 +17,7 @@ VALUES (
     'Administração para Teste',
     '457.456.789-09',
     'admin@email.com',
-    '$2y$12$2/iy1B0EiCXq1f1VtIs84eiVIF.vaqzYkh.wRDtg14/TGz46a8gjC',
+    '$2y$12$2/iy1B0EiCXq1f1VtIs84eiVIF.vaqzYkh.wRDtg14/TGz46a8gjC', -- SENHA: admin
     '1980-01-01',
     @adminCargoUUID,
     0,

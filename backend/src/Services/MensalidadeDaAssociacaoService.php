@@ -207,20 +207,28 @@ class MensalidadeDaAssociacaoService
                 if (!empty($data['associacao_uuid']) && $data['associacao_uuid'] !== $payloadUsuarioLogado['associacao_uuid']) {
                     throw new Exception("Você só pode criar mensalidades para sua própria associação");
                 }
+                $data['associacao_uuid'] = $payloadUsuarioLogado['associacao_uuid'];
                 break;
-                
+
             default:
                 throw new Exception("Permissão insuficiente 0,1 | create");
         }
-        
+
+        // Status: ver mapa documentado em MensalidadeDaPlataformaService (0 = aguardando pagamento)
+        $data['status'] = $data['status'] ?? 0;
+        $data['dias_atraso'] = $data['dias_atraso'] ?? 0;
+        foreach (['data_pagamento', 'url_anexo', 'url_recibo'] as $campo) {
+            if (array_key_exists($campo, $data) && $data[$campo] === '') $data[$campo] = null;
+        }
+
         v::key('valor_em_centavos', v::intType()->positive())
         ->key('usuario_uuid', v::uuid())
         ->key('associacao_uuid', v::uuid())
         ->key('data_vencimento',  v::date('Y-m-d'))
-        ->key('data_pagamento', v::optional(v::date('Y-m-d')))
-        ->key('status', v::intType()->positive())
-        ->key('dias_atraso', v::intType()->positive())
-        ->key('url_anexo', v::optional(v::url()))
+        ->key('data_pagamento', v::optional(v::date('Y-m-d')), false)
+        ->key('status', v::intType()->between(0, 4))
+        ->key('dias_atraso', v::intType()->min(0))
+        ->key('url_anexo', v::optional(v::url()), false)
         ->key('url_recibo', v::optional(v::url()), false)
         ->check($data);
 
@@ -260,8 +268,9 @@ class MensalidadeDaAssociacaoService
                 if ($mensalidadeDaAssociacao->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
                     throw new Exception("Você não tem permissão para editar esta mensalidade");
                 }
+                unset($data['associacao_uuid']);
                 break;
-                
+
             default:
                 throw new Exception("Permissão insuficiente 0,1 | update");
         }
@@ -270,9 +279,9 @@ class MensalidadeDaAssociacaoService
         ->key('usuario_uuid', v::uuid(), false)
         ->key('associacao_uuid', v::uuid(), false)
         ->key('data_vencimento',  v::date('Y-m-d'), false)
-        ->key('data_pagamento', v::date('Y-m-d'), false)
-        ->key('status', v::intType()->positive(), false)
-        ->key('dias_atraso', v::intType()->positive(), false)
+        ->key('data_pagamento', v::optional(v::date('Y-m-d')), false)
+        ->key('status', v::intType()->between(0, 4), false)
+        ->key('dias_atraso', v::intType()->min(0), false)
         ->key('url_anexo', v::optional(v::url()), false)
         ->key('url_recibo', v::optional(v::url()), false)
         ->check($data);
@@ -285,7 +294,7 @@ class MensalidadeDaAssociacaoService
             $this->associacaoService->findByUuid($data['associacao_uuid'], $payloadUsuarioLogado);
         }
 
-        $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
+        $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao', 'excluido'];
         foreach ($guarded as $g) unset($data[$g]);
 
         $data['usuario_alterador_uuid'] = $payloadUsuarioLogado['usuario_uuid'];

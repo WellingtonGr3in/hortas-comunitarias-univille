@@ -44,6 +44,16 @@ class MensalidadeDaPlataformaRepository
         return $registros;
     }
 
+    public function findByAssociacaoUuid(string $associacaoUuid): Collection
+    {
+        return $this->mensalidadeDaPlataformaModel
+        ->where("excluido", 0)
+        ->whereHas("usuario", function ($query) use ($associacaoUuid) {
+            $query->where("associacao_uuid", $associacaoUuid);
+        })
+        ->get();
+    }
+
     public function create(array $data): MensalidadeDaPlataformaModel
     {
         return $this->mensalidadeDaPlataformaModel->create($data);

@@ -90,7 +90,7 @@ class SessaoService
                 'plano_uuid' => $plano->uuid,
                 'data_vencimento' => $dataVencimento,
                 'data_pagamento' => null,
-                'status' => 1,
+                'status' => MensalidadeDaPlataformaService::STATUS_AGUARDANDO_PAGAMENTO,
                 'dias_atraso' => 0,
                 'usuario_criador_uuid' => $usuario->uuid,
                 'usuario_alterador_uuid' => $usuario->uuid,
