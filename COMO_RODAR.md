@@ -23,8 +23,11 @@ powershell.exe -executionpolicy bypass -file .\scripts\start-local.ps1
 no primeiro uso ele baixa e configura tudo. depois, acesse:
 
 - url: <http://localhost:3000>
-- login: `admin@email.com`
-- senha: `admin`
+- senha de todos os usuários de teste: `123456`
+  - `plataforma@gmail.com`: administrador da plataforma
+  - `associacao@gmail.com`: administrador da associação demonstração
+  - `horta@gmail.com`: administrador da horta demonstração
+  - `canteirista@gmail.com`: canteirista da horta demonstração
 
 para encerrar:
 

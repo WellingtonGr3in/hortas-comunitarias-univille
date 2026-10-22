@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { jwtDecode } from 'jwt-decode'
+import { PLATAFORMA, ADMIN_ASSOCIACAO, ADMINS, TODOS, podeAcessar, avisarAcessoNegado } from '@/utils/permissoes'
+
+// roles: cargos que podem abrir a rota (cargo_slug do JWT). Sem roles = qualquer pessoa logada.
 
 const routes = [
   {
@@ -18,162 +21,168 @@ const routes = [
     path: '/associacoes',
     name: 'AssociacoesList',
     component: () => import('@/views/Associacoes/List.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/hortas',
     name: 'HortasList',
     component: () => import('@/views/Hortas/List.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/canteiros',
     name: 'CanteirosList',
     component: () => import('@/views/Canteiros/Admin.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: TODOS }
   },
   {
     path: '/associacoes/criar',
     name: 'AssociacoesCreate',
     component: () => import('@/views/Associacoes/Create.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: PLATAFORMA }
   },
   {
     path: '/hortas/criar',
     name: 'HortasCreate',
     component: () => import('@/views/Hortas/Create.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMIN_ASSOCIACAO }
   },
   {
     path: '/canteiros/criar',
     name: 'CanteirosCreate',
     component: () => import('@/views/Canteiros/Create.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/associacoes/:id/editar',
     name: 'AssociacoesEdit',
     component: () => import('@/views/Associacoes/Edit.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: PLATAFORMA }
   },
   {
     path: '/hortas/:id/editar',
     name: 'HortasEdit',
     component: () => import('@/views/Hortas/Edit.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/canteiristas',
     name: 'CanteiristasList',
     component: () => import('@/views/Canteiristas/List.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/canteiristas/criar',
     name: 'CanteiristasCreate',
     component: () => import('@/views/Canteiristas/Create.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/canteiristas/:id/editar',
     name: 'CanteiristasEdit',
     component: () => import('@/views/Canteiristas/Edit.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/pagamentos',
     name: 'PagamentosList',
     component: () => import('@/views/Pagamentos/List.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: TODOS }
   },
   {
     path: '/pagamentos/criar',
     name: 'PagamentosCreate',
     component: () => import('@/views/Pagamentos/Create.vue'),
-    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'] }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/pagamentos/:id/editar',
     name: 'PagamentosEdit',
     component: () => import('@/views/Pagamentos/Edit.vue'),
-    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'] }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/mensalidades',
     name: 'MensalidadesList',
     component: () => import('@/views/Mensalidades/List.vue'),
-    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral'] }
+    meta: { requiresAuth: true, roles: ADMIN_ASSOCIACAO }
   },
   {
     path: '/mensalidades-associacao',
     name: 'MensalidadesAssociacaoList',
     component: () => import('@/views/MensalidadesAssociacao/List.vue'),
-    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral'] }
+    meta: { requiresAuth: true, roles: ADMIN_ASSOCIACAO }
   },
   {
     path: '/inventario',
     name: 'InventarioList',
     component: () => import('@/views/Inventario/List.vue'),
-    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'] }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/inventario/:id',
     name: 'InventarioDetalhe',
     component: () => import('@/views/Inventario/Detalhe.vue'),
-    meta: { requiresAuth: true, roles: ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'] }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/planos',
     name: 'PlanosList',
     component: () => import('@/views/Planos/List.vue'),
-    meta: { requiresAuth: true, roles: ['admin_plataforma'] }
+    meta: { requiresAuth: true, roles: PLATAFORMA }
   },
   {
     path: '/dependentes',
     name: 'DependentesList',
     component: () => import('@/views/Dependentes/List.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: TODOS }
   },
   {
     path: '/dependentes/criar',
     name: 'DependentesCreate',
     component: () => import('@/views/Dependentes/Create.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/dependentes/:id/editar',
     name: 'DependentesEdit',
     component: () => import('@/views/Dependentes/Edit.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/notificacoes',
     name: 'NotificacoesList',
     component: () => import('@/views/Notificacoes/List.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: TODOS }
   },
   {
     path: '/notificacoes/criar',
     name: 'NotificacoesCreate',
     component: () => import('@/views/Notificacoes/Create.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/notificacoes/:id/editar',
     name: 'NotificacoesEdit',
     component: () => import('@/views/Notificacoes/Edit.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/canteiros/:id/editar',
     name: 'CanteirosEdit',
     component: () => import('@/views/Canteiros/Edit.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ADMINS }
   },
   {
     path: '/usuarios',
     name: 'UsuariosList',
     component: () => import('@/views/Usuarios/List.vue'),
+    meta: { requiresAuth: true, roles: ADMINS }
+  },
+  {
+    path: '/perfil',
+    name: 'Perfil',
+    component: () => import('@/views/Perfil.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -203,7 +212,10 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !authenticated) return next('/login')
   if (to.meta.guest && authenticated) return next('/')
   // Rotas restritas por cargo (cargo_slug do JWT)
-  if (to.meta.roles && !to.meta.roles.includes(cargoSlug)) return next('/')
+  if (!podeAcessar(to, cargoSlug)) {
+    avisarAcessoNegado('Essa página não está disponível para o seu perfil.')
+    return next('/')
+  }
   next()
 })
 

@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <Navbar v-if="isAuthenticated" />
+    <AvisoAcessoNegado />
     
     <main>
       <router-view />
@@ -20,11 +21,13 @@
 import { computed } from 'vue'
 import { useStore } from 'vuex'
 import Navbar from './components/Navbar.vue'
+import AvisoAcessoNegado from './components/AvisoAcessoNegado.vue'
 
 export default {
   name: 'App',
   components: {
-    Navbar
+    Navbar,
+    AvisoAcessoNegado
   },
   setup() {
     const store = useStore()

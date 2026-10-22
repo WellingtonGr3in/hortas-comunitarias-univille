@@ -21,7 +21,7 @@
           required
         >
           <option value="">Selecione o tipo</option>
-          <option value="aviso_geral">Aviso Geral</option>
+          <option v-if="podeAvisoGeral || form.tipo === 'aviso_geral'" value="aviso_geral">Aviso Geral</option>
           <option value="aviso_canteirista">Aviso para Canteirista Específico</option>
           <option value="evento_horta">Evento da Horta</option>
         </select>
@@ -183,6 +183,10 @@ export default {
     }
   },
   computed: {
+    // Aviso Geral é só do administrador da plataforma
+    podeAvisoGeral() {
+      return this.$store.getters['auth/cargoSlug'] === 'admin_plataforma'
+    },
     ...mapState('canteiristas', ['canteiristas']),
     ...mapState('hortas', ['hortas'])
   },

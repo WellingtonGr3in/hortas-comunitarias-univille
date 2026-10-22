@@ -1,0 +1,3503 @@
+{
+	"info": {
+		"_postman_id": "11d14894-924f-5ef7-88dd-915c82588fe2",
+		"name": "permissoes-por-perfil",
+		"description": "HC-72: cada perfil vê e altera só o que o Manual do Usuário promete. A coleção cria os próprios dados (duas associações, duas hortas e um usuário de cada perfil) com o admin da plataforma e depois testa o que cada perfil pode e não pode fazer, inclusive acessar dados da outra associação ou horta.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Preparação",
+			"description": "O admin da plataforma cria duas associações (A e B), cada uma com uma horta, e um usuário de cada perfil.",
+			"item": [
+				{
+					"name": "login admin plataforma",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set('token_plat', pm.response.json().token);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/sessoes/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"sessoes",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\": \"{{EMAIL_PLATAFORMA}}\", \"senha\": \"{{SENHA_PLATAFORMA}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "cargos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"const slug = (s) => (lista.find(c => c.slug === s) || {}).uuid;",
+									"pm.test('cargos base existem', () => { ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral', 'canteirista'].forEach(s => pm.expect(slug(s), s).to.be.a('string')); });",
+									"pm.test('cargo dependente desativado', () => pm.expect(slug('dependente')).to.be.undefined);",
+									"pm.collectionVariables.set('cargo_admin_plataforma', slug('admin_plataforma'));",
+									"pm.collectionVariables.set('cargo_admin_associacao', slug('admin_associacao_geral'));",
+									"pm.collectionVariables.set('cargo_admin_horta', slug('admin_horta_geral'));",
+									"pm.collectionVariables.set('sufixo', Date.now());"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/cargos",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"cargos"
+							]
+						}
+					}
+				},
+				{
+					"name": "associação A",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.collectionVariables.set('assoc_A', pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/associacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"associacoes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Associação Permissões A {{sufixo}}\",\n  \"email\": \"assoca@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "associação B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.collectionVariables.set('assoc_B', pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/associacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"associacoes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Associação Permissões B {{sufixo}}\",\n  \"email\": \"assocb@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "horta A",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Horta criada', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"const h = pm.response.json(); pm.collectionVariables.set('horta_A', h.uuid || h.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/hortas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"hortas"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Horta Permissões A\",\n  \"associacao_vinculada_uuid\": \"{{assoc_A}}\",\n  \"localizacao\": \"Rua A, 1\",\n  \"telefone\": \"(47) 3333-0000\",\n  \"responsavel\": \"Responsável A\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "horta B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Horta criada', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"const h = pm.response.json(); pm.collectionVariables.set('horta_B', h.uuid || h.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/hortas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"hortas"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Horta Permissões B\",\n  \"associacao_vinculada_uuid\": \"{{assoc_B}}\",\n  \"localizacao\": \"Rua B, 1\",\n  \"telefone\": \"(47) 3333-0000\",\n  \"responsavel\": \"Responsável B\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "canteiro A",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Canteiro criado', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"const c = pm.response.json(); pm.collectionVariables.set('canteiro_A', (c.data || c).uuid || (c.data || c).id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiros",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiros"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"numero_identificador\": \"PA-{{sufixo}}\",\n  \"tamanho_m2\": 12,\n  \"horta_uuid\": \"{{horta_A}}\",\n  \"status\": \"Disponível\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "canteiro B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Canteiro criado', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"const c = pm.response.json(); pm.collectionVariables.set('canteiro_B', (c.data || c).uuid || (c.data || c).id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiros",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiros"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"numero_identificador\": \"PB-{{sufixo}}\",\n  \"tamanho_m2\": 12,\n  \"horta_uuid\": \"{{horta_B}}\",\n  \"status\": \"Disponível\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "usuário admin_assoc_A",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"function gerarCpf() {",
+									"  const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));",
+									"  const dv = (base) => { const s = base.reduce((acc, d, i) => acc + d * (base.length + 1 - i), 0); const r = (s * 10) % 11; return r === 10 ? 0 : r; };",
+									"  n.push(dv(n)); n.push(dv(n));",
+									"  const c = n.join('');",
+									"  return `${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}-${c.slice(9)}`;",
+									"}",
+									"pm.collectionVariables.set('cpf_admin_assoc_A', gerarCpf());"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Usuário criado', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"pm.collectionVariables.set('usuario_admin_assoc_A', pm.response.json().uuid);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome_completo\": \"Teste admin_assoc_A\",\n  \"cpf\": \"{{cpf_admin_assoc_A}}\",\n  \"email\": \"admin_assoc_a_{{sufixo}}@example.com\",\n  \"senha\": \"{{SENHA_TESTE}}\",\n  \"dias_ausente\": 1,\n  \"data_de_nascimento\": \"1990-01-01\",\n  \"apelido\": \"admin_assoc_A\",\n  \"cargo_uuid\": \"{{cargo_admin_associacao}}\",\n  \"associacao_uuid\": \"{{assoc_A}}\",\n  \"horta_uuid\": \"{{horta_A}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "usuário admin_horta_A",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"function gerarCpf() {",
+									"  const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));",
+									"  const dv = (base) => { const s = base.reduce((acc, d, i) => acc + d * (base.length + 1 - i), 0); const r = (s * 10) % 11; return r === 10 ? 0 : r; };",
+									"  n.push(dv(n)); n.push(dv(n));",
+									"  const c = n.join('');",
+									"  return `${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}-${c.slice(9)}`;",
+									"}",
+									"pm.collectionVariables.set('cpf_admin_horta_A', gerarCpf());"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Usuário criado', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"pm.collectionVariables.set('usuario_admin_horta_A', pm.response.json().uuid);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome_completo\": \"Teste admin_horta_A\",\n  \"cpf\": \"{{cpf_admin_horta_A}}\",\n  \"email\": \"admin_horta_a_{{sufixo}}@example.com\",\n  \"senha\": \"{{SENHA_TESTE}}\",\n  \"dias_ausente\": 1,\n  \"data_de_nascimento\": \"1990-01-01\",\n  \"apelido\": \"admin_horta_A\",\n  \"cargo_uuid\": \"{{cargo_admin_horta}}\",\n  \"associacao_uuid\": \"{{assoc_A}}\",\n  \"horta_uuid\": \"{{horta_A}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "usuário admin_horta_B",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"function gerarCpf() {",
+									"  const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));",
+									"  const dv = (base) => { const s = base.reduce((acc, d, i) => acc + d * (base.length + 1 - i), 0); const r = (s * 10) % 11; return r === 10 ? 0 : r; };",
+									"  n.push(dv(n)); n.push(dv(n));",
+									"  const c = n.join('');",
+									"  return `${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}-${c.slice(9)}`;",
+									"}",
+									"pm.collectionVariables.set('cpf_admin_horta_B', gerarCpf());"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Usuário criado', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"pm.collectionVariables.set('usuario_admin_horta_B', pm.response.json().uuid);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome_completo\": \"Teste admin_horta_B\",\n  \"cpf\": \"{{cpf_admin_horta_B}}\",\n  \"email\": \"admin_horta_b_{{sufixo}}@example.com\",\n  \"senha\": \"{{SENHA_TESTE}}\",\n  \"dias_ausente\": 1,\n  \"data_de_nascimento\": \"1990-01-01\",\n  \"apelido\": \"admin_horta_B\",\n  \"cargo_uuid\": \"{{cargo_admin_horta}}\",\n  \"associacao_uuid\": \"{{assoc_B}}\",\n  \"horta_uuid\": \"{{horta_B}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "canteirista A",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"function gerarCpf() {",
+									"  const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));",
+									"  const dv = (base) => { const s = base.reduce((acc, d, i) => acc + d * (base.length + 1 - i), 0); const r = (s * 10) % 11; return r === 10 ? 0 : r; };",
+									"  n.push(dv(n)); n.push(dv(n));",
+									"  const c = n.join('');",
+									"  return `${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}-${c.slice(9)}`;",
+									"}",
+									"pm.collectionVariables.set('cpf_canteirista_A', gerarCpf());"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Canteirista criado', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"const c = pm.response.json(); pm.collectionVariables.set('cant_A', c.id || c.uuid);",
+									"pm.collectionVariables.set('usuario_canteirista_A', c.usuario_uuid);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome_completo\": \"Teste canteirista_A\",\n  \"cpf\": \"{{cpf_canteirista_A}}\",\n  \"email\": \"canteirista_a_{{sufixo}}@example.com\",\n  \"senha\": \"{{SENHA_TESTE}}\",\n  \"data_de_nascimento\": \"1990-01-01\",\n  \"apelido\": \"canteirista_A\",\n  \"telefone\": \"(47) 99999-0000\",\n  \"horta_uuid\": \"{{horta_A}}\",\n  \"canteiros\": [\n    \"{{canteiro_A}}\"\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "canteirista B",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"function gerarCpf() {",
+									"  const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));",
+									"  const dv = (base) => { const s = base.reduce((acc, d, i) => acc + d * (base.length + 1 - i), 0); const r = (s * 10) % 11; return r === 10 ? 0 : r; };",
+									"  n.push(dv(n)); n.push(dv(n));",
+									"  const c = n.join('');",
+									"  return `${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}-${c.slice(9)}`;",
+									"}",
+									"pm.collectionVariables.set('cpf_canteirista_B', gerarCpf());"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Canteirista criado', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"const c = pm.response.json(); pm.collectionVariables.set('cant_B', c.id || c.uuid);",
+									"pm.collectionVariables.set('usuario_canteirista_B', c.usuario_uuid);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome_completo\": \"Teste canteirista_B\",\n  \"cpf\": \"{{cpf_canteirista_B}}\",\n  \"email\": \"canteirista_b_{{sufixo}}@example.com\",\n  \"senha\": \"{{SENHA_TESTE}}\",\n  \"data_de_nascimento\": \"1990-01-01\",\n  \"apelido\": \"canteirista_B\",\n  \"telefone\": \"(47) 99999-0000\",\n  \"horta_uuid\": \"{{horta_B}}\",\n  \"canteiros\": [\n    \"{{canteiro_B}}\"\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "dependente A",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"function gerarCpf() {",
+									"  const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));",
+									"  const dv = (base) => { const s = base.reduce((acc, d, i) => acc + d * (base.length + 1 - i), 0); const r = (s * 10) % 11; return r === 10 ? 0 : r; };",
+									"  n.push(dv(n)); n.push(dv(n));",
+									"  const c = n.join('');",
+									"  return `${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}-${c.slice(9)}`;",
+									"}",
+									"pm.collectionVariables.set('cpf_dep_A', gerarCpf());"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.collectionVariables.set('dep_A', pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Dependente A\",\n  \"cpf\": \"{{cpf_dep_A}}\",\n  \"idade\": 10,\n  \"carteirista_uuid\": \"{{cant_A}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "pagamento A",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.collectionVariables.set('pag_A', pm.response.json().data.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/pagamentos",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"pagamentos"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"carteirista_uuid\": \"{{cant_A}}\",\n  \"valor\": 50,\n  \"forma_pagamento\": \"pix\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "dependente B",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"function gerarCpf() {",
+									"  const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));",
+									"  const dv = (base) => { const s = base.reduce((acc, d, i) => acc + d * (base.length + 1 - i), 0); const r = (s * 10) % 11; return r === 10 ? 0 : r; };",
+									"  n.push(dv(n)); n.push(dv(n));",
+									"  const c = n.join('');",
+									"  return `${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}-${c.slice(9)}`;",
+									"}",
+									"pm.collectionVariables.set('cpf_dep_B', gerarCpf());"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.collectionVariables.set('dep_B', pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Dependente B\",\n  \"cpf\": \"{{cpf_dep_B}}\",\n  \"idade\": 10,\n  \"carteirista_uuid\": \"{{cant_B}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "pagamento B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.collectionVariables.set('pag_B', pm.response.json().data.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/pagamentos",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"pagamentos"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"carteirista_uuid\": \"{{cant_B}}\",\n  \"valor\": 50,\n  \"forma_pagamento\": \"pix\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "login assoc_A",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set('token_assoc_A', pm.response.json().token);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/sessoes/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"sessoes",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\": \"admin_assoc_a_{{sufixo}}@example.com\", \"senha\": \"{{SENHA_TESTE}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "login horta_A",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set('token_horta_A', pm.response.json().token);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/sessoes/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"sessoes",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\": \"admin_horta_a_{{sufixo}}@example.com\", \"senha\": \"{{SENHA_TESTE}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "login horta_B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set('token_horta_B', pm.response.json().token);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/sessoes/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"sessoes",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\": \"admin_horta_b_{{sufixo}}@example.com\", \"senha\": \"{{SENHA_TESTE}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "login cant_A",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set('token_cant_A', pm.response.json().token);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/sessoes/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"sessoes",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\": \"canteirista_a_{{sufixo}}@example.com\", \"senha\": \"{{SENHA_TESTE}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "login cant_B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set('token_cant_B', pm.response.json().token);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/sessoes/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"sessoes",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\": \"canteirista_b_{{sufixo}}@example.com\", \"senha\": \"{{SENHA_TESTE}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Regras gerais",
+			"description": "",
+			"item": [
+				{
+					"name": "sem token -> 401",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 401', () => pm.response.to.have.status(401));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/hortas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"hortas"
+							]
+						}
+					}
+				},
+				{
+					"name": "rota fora do mapa -> 403",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/rota-que-nao-existe",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"rota-que-nao-existe"
+							]
+						}
+					}
+				},
+				{
+					"name": "/Canteiristas maiúsculo não existe mais",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/Canteiristas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"Canteiristas"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Canteirista",
+			"description": "Só consulta os próprios dados e edita o próprio telefone e e-mail.",
+			"item": [
+				{
+					"name": "não cria canteirista",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "não edita canteirista",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas/{{cant_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas",
+								"{{cant_A}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"telefone\": \"1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "não exclui canteirista",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas/{{cant_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas",
+								"{{cant_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "lista só o próprio cadastro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('só ele', () => pm.expect(lista.map(c => c.id)).to.eql([pm.collectionVariables.get('cant_A')]));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas"
+							]
+						}
+					}
+				},
+				{
+					"name": "não abre cadastro de outro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas/{{cant_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas",
+								"{{cant_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "vê só os próprios pagamentos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('só os dele', () => { pm.expect(lista.length).to.be.above(0); lista.forEach(x => pm.expect(x.carteirista_uuid).to.eql(pm.collectionVariables.get('cant_A'))); });"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/pagamentos",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"pagamentos"
+							]
+						}
+					}
+				},
+				{
+					"name": "não abre pagamento de outro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('negado', () => pm.expect(pm.response.code).to.be.oneOf([403, 404]));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/pagamentos/{{pag_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"pagamentos",
+								"{{pag_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "vê só os próprios dependentes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('só os dele', () => { pm.expect(lista.length).to.be.above(0); lista.forEach(x => pm.expect(x.carteirista_uuid).to.eql(pm.collectionVariables.get('cant_A'))); });"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes"
+							]
+						}
+					}
+				},
+				{
+					"name": "não abre dependente de outro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes/{{dep_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes",
+								"{{dep_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "não cadastra dependente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"x\",\n  \"cpf\": \"1\",\n  \"idade\": 1,\n  \"carteirista_uuid\": \"{{cant_A}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "vê o próprio canteiro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('só os dele', () => pm.expect(lista.map(c => c.id)).to.eql([pm.collectionVariables.get('canteiro_A')]));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiros",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiros"
+							]
+						}
+					}
+				},
+				{
+					"name": "não abre canteiro da outra horta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiros/{{canteiro_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiros",
+								"{{canteiro_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "vê só a própria horta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('só a dele', () => pm.expect(lista.map(h => h.uuid || h.id)).to.eql([pm.collectionVariables.get('horta_A')]));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/hortas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"hortas"
+							]
+						}
+					}
+				},
+				{
+					"name": "vê só a própria associação",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('só a dele', () => pm.expect(lista.map(a => a.uuid || a.id)).to.eql([pm.collectionVariables.get('assoc_A')]));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/associacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"associacoes"
+							]
+						}
+					}
+				},
+				{
+					"name": "não abre outra associação",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/associacoes/{{assoc_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"associacoes",
+								"{{assoc_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "não lista usuários",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios"
+							]
+						}
+					}
+				},
+				{
+					"name": "vê o próprio perfil",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios/{{usuario_canteirista_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios",
+								"{{usuario_canteirista_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "não vê perfil de outro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios/{{usuario_admin_horta_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios",
+								"{{usuario_admin_horta_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "edita o próprio telefone",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios/{{usuario_canteirista_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios",
+								"{{usuario_canteirista_A}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"telefone\": \"(47) 98888-7777\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "não edita o próprio nome",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios/{{usuario_canteirista_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios",
+								"{{usuario_canteirista_A}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome_completo\": \"Outro\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "não edita perfil de outro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios/{{usuario_canteirista_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios",
+								"{{usuario_canteirista_B}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"telefone\": \"(47) 90000-0000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "não vê financeiro da horta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/financeiro-da-horta",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"financeiro-da-horta"
+							]
+						}
+					}
+				},
+				{
+					"name": "não cria notificação",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/notificacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"notificacoes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo\": \"aviso_geral\",\n  \"titulo\": \"x\",\n  \"mensagem\": \"x\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "lê avisos ativos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/notificacoes/ativas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"notificacoes",
+								"ativas"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Admin de horta",
+			"description": "Cuida só da própria horta.",
+			"item": [
+				{
+					"name": "403 no canteiro da horta B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiros/{{canteiro_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiros",
+								"{{canteiro_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "403 no dependente da horta B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes/{{dep_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes",
+								"{{dep_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "403 no pagamento da horta B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/pagamentos/{{pag_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"pagamentos",
+								"{{pag_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "403 no canteirista da horta B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas/{{cant_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas",
+								"{{cant_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "lista só canteiristas da própria horta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('só da horta A', () => lista.forEach(c => pm.expect(c.horta_vinculada).to.eql(pm.collectionVariables.get('horta_A'))));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas"
+							]
+						}
+					}
+				},
+				{
+					"name": "não envia Aviso Geral",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/notificacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"notificacoes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo\": \"aviso_geral\",\n  \"titulo\": \"x\",\n  \"mensagem\": \"x\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "cria Evento da própria horta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.collectionVariables.set('evento_A', pm.response.json().data.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/notificacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"notificacoes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo\": \"evento_horta\",\n  \"titulo\": \"Mutirão\",\n  \"mensagem\": \"Sábado\",\n  \"horta_uuid\": \"{{horta_A}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "não cria evento da horta B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/notificacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"notificacoes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo\": \"evento_horta\",\n  \"titulo\": \"x\",\n  \"mensagem\": \"x\",\n  \"horta_uuid\": \"{{horta_B}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "canteirista da horta B não vê o evento da horta A",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('não aparece', () => pm.expect(lista.map(n => n.id)).to.not.include(pm.collectionVariables.get('evento_A')));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_B}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/notificacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"notificacoes"
+							]
+						}
+					}
+				},
+				{
+					"name": "canteirista da horta A vê o evento",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('aparece', () => pm.expect(lista.map(n => n.id)).to.include(pm.collectionVariables.get('evento_A')));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/notificacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"notificacoes"
+							]
+						}
+					}
+				},
+				{
+					"name": "não cria canteiro na horta B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiros",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiros"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"numero_identificador\": \"X-{{sufixo}}\",\n  \"tamanho_m2\": 10,\n  \"horta_uuid\": \"{{horta_B}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "cadastra dependente da própria horta",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"function gerarCpf() {",
+									"  const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));",
+									"  const dv = (base) => { const s = base.reduce((acc, d, i) => acc + d * (base.length + 1 - i), 0); const r = (s * 10) % 11; return r === 10 ? 0 : r; };",
+									"  n.push(dv(n)); n.push(dv(n));",
+									"  const c = n.join('');",
+									"  return `${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}-${c.slice(9)}`;",
+									"}",
+									"pm.collectionVariables.set('cpf_dep_extra', gerarCpf());"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Dependente extra\",\n  \"cpf\": \"{{cpf_dep_extra}}\",\n  \"idade\": 8,\n  \"carteirista_uuid\": \"{{cant_A}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "não cria horta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/hortas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"hortas"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"x\",\n  \"associacao_vinculada_uuid\": \"{{assoc_A}}\",\n  \"localizacao\": \"x\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Admin de associação",
+			"description": "Cuida só da própria associação.",
+			"item": [
+				{
+					"name": "lista só hortas da própria associação",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('só da associação A', () => lista.forEach(h => pm.expect(h.associacao_vinculada_uuid).to.eql(pm.collectionVariables.get('assoc_A'))));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_assoc_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/hortas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"hortas"
+							]
+						}
+					}
+				},
+				{
+					"name": "lista só usuários da própria associação",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('só da associação A', () => lista.forEach(u => pm.expect(u.associacao_uuid).to.eql(pm.collectionVariables.get('assoc_A'))));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_assoc_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios"
+							]
+						}
+					}
+				},
+				{
+					"name": "vê só a própria associação",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const corpo = pm.response.json(); const lista = Array.isArray(corpo) ? corpo : (corpo.data || []);",
+									"pm.test('só a A', () => pm.expect(lista.map(a => a.uuid || a.id)).to.eql([pm.collectionVariables.get('assoc_A')]));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_assoc_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/associacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"associacoes"
+							]
+						}
+					}
+				},
+				{
+					"name": "não altera associação",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_assoc_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/associacoes/{{assoc_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"associacoes",
+								"{{assoc_A}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"telefone\": \"1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "não abre canteirista da associação B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_assoc_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas/{{cant_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas",
+								"{{cant_B}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "não promove ninguém a admin da plataforma",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_assoc_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios/{{usuario_admin_horta_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios",
+								"{{usuario_admin_horta_A}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cargo_uuid\": \"{{cargo_admin_plataforma}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "não abre pagamento da associação B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 403', () => pm.response.to.have.status(403));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_assoc_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/pagamentos/{{pag_B}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"pagamentos",
+								"{{pag_B}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Admin da plataforma",
+			"description": "",
+			"item": [
+				{
+					"name": "GET associacoes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/associacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"associacoes"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET hortas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/hortas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"hortas"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET canteiros",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiros",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiros"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET canteiristas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET dependentes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET pagamentos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/pagamentos",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"pagamentos"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET notificacoes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/notificacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"notificacoes"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET usuarios",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET planos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/planos",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"planos"
+							]
+						}
+					}
+				},
+				{
+					"name": "envia Aviso Geral",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/notificacoes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"notificacoes"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo\": \"aviso_geral\",\n  \"titulo\": \"Geral\",\n  \"mensagem\": \"Para todos\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8181/api"
+		},
+		{
+			"key": "EMAIL_PLATAFORMA",
+			"value": "admin@email.com"
+		},
+		{
+			"key": "SENHA_PLATAFORMA",
+			"value": "admin"
+		},
+		{
+			"key": "SENHA_TESTE",
+			"value": "senha-de-teste-123"
+		}
+	]
+}

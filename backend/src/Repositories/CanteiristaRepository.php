@@ -19,6 +19,13 @@ class CanteiristaRepository
             ->first();
     }
 
+    public function findByUsuarioUuid(string $usuarioUuid)
+    {
+        return CanteiristaModel::where('usuario_uuid', $usuarioUuid)
+            ->where('excluido', false)
+            ->first();
+    }
+
     public function create(array $data)
     {
         return CanteiristaModel::create($data);
@@ -97,6 +104,11 @@ class CanteiristaRepository
             $query->where('horta_uuid', $filtros['horta_uuid']);
         }
 
+        // Escopo de quem consulta: lista de hortas permitidas (vazia = nenhuma)
+        if (array_key_exists('hortas_uuid', $filtros)) {
+            $query->whereIn('horta_uuid', $filtros['hortas_uuid']);
+        }
+
         if (!empty($filtros['data_inicio'])) {
             $query->where('data_de_criacao', '>=', $filtros['data_inicio']);
         }
@@ -132,14 +144,14 @@ class CanteiristaRepository
     }
 
     /**
-     * Retorna o total de canteiristas (não excluídos), opcionalmente filtrado por horta.
+     * Retorna o total de canteiristas (não excluídos), opcionalmente filtrado por hortas (null = todas).
      */
-    public function countTotal(?string $hortaUuid = null): int
+    public function countTotal(?array $hortas = null): int
     {
         $query = CanteiristaModel::where('excluido', false);
 
-        if (!empty($hortaUuid)) {
-            $query->where('horta_uuid', $hortaUuid);
+        if ($hortas !== null) {
+            $query->whereIn('horta_uuid', $hortas);
         }
 
         return $query->count();
@@ -148,7 +160,7 @@ class CanteiristaRepository
     /**
      * Retorna o total de canteiristas que possuem ao menos um canteiro vinculado ativo.
      */
-    public function countComCanteirosVinculados(?string $hortaUuid = null): int
+    public function countComCanteirosVinculados(?array $hortas = null): int
     {
         $query = CanteiristaModel::where('excluido', false)
             ->whereHas('canteiros', function ($q) {
@@ -156,8 +168,8 @@ class CanteiristaRepository
                   ->where('canteiristas_canteiros.excluido', 0);
             });
 
-        if (!empty($hortaUuid)) {
-            $query->where('horta_uuid', $hortaUuid);
+        if ($hortas !== null) {
+            $query->whereIn('horta_uuid', $hortas);
         }
 
         return $query->count();
@@ -166,7 +178,7 @@ class CanteiristaRepository
     /**
      * Retorna o total de canteiros ativos vinculados a canteiristas (não excluídos).
      */
-    public function countCanteirosVinculados(?string $hortaUuid = null): int
+    public function countCanteirosVinculados(?array $hortas = null): int
     {
         $query = CanteiristaModel::where('excluido', false)
             ->withCount(['canteiros' => function ($q) {
@@ -174,8 +186,8 @@ class CanteiristaRepository
                   ->where('canteiristas_canteiros.excluido', 0);
             }]);
 
-        if (!empty($hortaUuid)) {
-            $query->where('horta_uuid', $hortaUuid);
+        if ($hortas !== null) {
+            $query->whereIn('horta_uuid', $hortas);
         }
 
         return (int) $query->get()->sum('canteiros_count');
@@ -184,14 +196,14 @@ class CanteiristaRepository
     /**
      * Retorna a contagem de canteiristas agrupada por horta.
      */
-    public function countPorHorta(?string $hortaUuid = null): array
+    public function countPorHorta(?array $hortas = null): array
     {
         $query = CanteiristaModel::where('excluido', false)
             ->selectRaw('horta_uuid, COUNT(*) as total')
             ->groupBy('horta_uuid');
 
-        if (!empty($hortaUuid)) {
-            $query->where('horta_uuid', $hortaUuid);
+        if ($hortas !== null) {
+            $query->whereIn('horta_uuid', $hortas);
         }
 
         return $query->get()
@@ -205,7 +217,7 @@ class CanteiristaRepository
     /**
      * Retorna a contagem de canteiristas criados por mês nos últimos $meses meses.
      */
-    public function countPorMes(int $meses = 6, ?string $hortaUuid = null): array
+    public function countPorMes(int $meses = 6, ?array $hortas = null): array
     {
         $dataLimite = date('Y-m-d 00:00:00', strtotime("-{$meses} months"));
 
@@ -215,8 +227,8 @@ class CanteiristaRepository
             ->groupBy('mes')
             ->orderBy('mes', 'asc');
 
-        if (!empty($hortaUuid)) {
-            $query->where('horta_uuid', $hortaUuid);
+        if ($hortas !== null) {
+            $query->whereIn('horta_uuid', $hortas);
         }
 
         return $query->get()

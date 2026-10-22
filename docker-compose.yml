@@ -1,7 +1,8 @@
 # Sistema completo de Hortas Comunitárias em Docker.
 #
 #   docker compose up -d --build     sobe tudo (a primeira vez demora alguns minutos)
-#   http://localhost:3000            sistema (login: admin@email.com / admin)
+#   http://localhost:3000            sistema (login: plataforma@gmail.com, associacao@gmail.com,
+#                                    horta@gmail.com ou canteirista@gmail.com, senha 123456)
 #   docker compose down              para tudo; o banco continua salvo no volume
 #
 # Segredos e senhas abaixo são só para uso local. Para trocar, crie um arquivo .env

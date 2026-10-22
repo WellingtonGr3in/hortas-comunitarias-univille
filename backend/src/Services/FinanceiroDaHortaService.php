@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\FinanceiroDaHortaModel;
 use App\Repositories\FinanceiroDaHortaRepository;
 use Respect\Validation\Validator as v;
@@ -38,7 +39,7 @@ class FinanceiroDaHortaService
                 $hortas = $this->hortaService->findAllWhere([], $payloadUsuarioLogado);
                 $hortasUuids = $hortas->pluck('uuid')->toArray();
                 return $this->financeiroDaHortaRepository->findAllWhere(['excluido' => 0])
-                    ->filter(fn($f) => in_array($f->horta_uuid, $hortasUuids));
+                    ->filter(fn($f) => in_array($f->horta_uuid, $hortasUuids))->values();
 
             case 'admin_horta_geral':
                 return $this->financeiroDaHortaRepository->findAllWhere([
@@ -70,19 +71,19 @@ class FinanceiroDaHortaService
 
             case 'admin_associacao_geral':
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar este lançamento");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar este lançamento");
                 }
                 return $financeiro;
 
             case 'admin_horta_geral':
                 if ($financeiro->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar este lançamento");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar este lançamento");
                 }
                 return $financeiro;
 
             default:
                 if ($financeiro->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar este lançamento");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar este lançamento");
                 }
                 return $financeiro;
         }
@@ -98,19 +99,19 @@ class FinanceiroDaHortaService
 
             case 'admin_associacao_geral':
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar lançamentos desta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar lançamentos desta horta");
                 }
                 return $this->financeiroDaHortaRepository->findByHortaUuid($hortaUuid);
 
             case 'admin_horta_geral':
                 if ($hortaUuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar lançamentos desta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar lançamentos desta horta");
                 }
                 return $this->financeiroDaHortaRepository->findByHortaUuid($hortaUuid);
 
             default:
                 if ($hortaUuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar lançamentos desta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar lançamentos desta horta");
                 }
                 return $this->financeiroDaHortaRepository->findByHortaUuid($hortaUuid);
         }
@@ -120,7 +121,7 @@ class FinanceiroDaHortaService
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
 
         if (!in_array($cargo, ['admin_plataforma','admin_associacao_geral','admin_horta_geral'])) {
-            throw new Exception("Permissão insuficiente | create");
+            throw new AcessoNegadoException("Permissão insuficiente | create");
         }
 
         v::key('valor_em_centavos', v::intType()->min(0))
@@ -135,12 +136,12 @@ class FinanceiroDaHortaService
 
         if ($cargo === 'admin_associacao_geral' &&
             $horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-            throw new Exception("Você só pode criar lançamentos para hortas da sua associação");
+            throw new AcessoNegadoException("Você só pode criar lançamentos para hortas da sua associação");
         }
 
         if ($cargo === 'admin_horta_geral' &&
             $data['horta_uuid'] !== $payloadUsuarioLogado['horta_uuid']) {
-            throw new Exception("Você só pode criar lançamentos para sua própria horta");
+            throw new AcessoNegadoException("Você só pode criar lançamentos para sua própria horta");
         }
 
         if (!empty($data['categoria_uuid'])) {
@@ -165,19 +166,19 @@ class FinanceiroDaHortaService
 
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
         if (!in_array($cargo, ['admin_plataforma','admin_associacao_geral','admin_horta_geral'])) {
-            throw new Exception("Permissão insuficiente | update");
+            throw new AcessoNegadoException("Permissão insuficiente | update");
         }
 
         $horta = $this->hortaService->findByUuid($financeiro->horta_uuid, $payloadUsuarioLogado);
 
         if ($cargo === 'admin_associacao_geral' &&
             $horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-            throw new Exception("Você não tem permissão para editar este lançamento");
+            throw new AcessoNegadoException("Você não tem permissão para editar este lançamento");
         }
 
         if ($cargo === 'admin_horta_geral' &&
             $financeiro->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-            throw new Exception("Você não tem permissão para editar este lançamento");
+            throw new AcessoNegadoException("Você não tem permissão para editar este lançamento");
         }
 
         v::key('valor_em_centavos', v::intType()->min(0), false)
@@ -208,19 +209,19 @@ class FinanceiroDaHortaService
 
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
         if (!in_array($cargo, ['admin_plataforma','admin_associacao_geral','admin_horta_geral'])) {
-            throw new Exception("Permissão insuficiente | delete");
+            throw new AcessoNegadoException("Permissão insuficiente | delete");
         }
 
         $horta = $this->hortaService->findByUuid($financeiro->horta_uuid, $payloadUsuarioLogado);
 
         if ($cargo === 'admin_associacao_geral' &&
             $horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-            throw new Exception("Você não tem permissão para deletar este lançamento");
+            throw new AcessoNegadoException("Você não tem permissão para deletar este lançamento");
         }
 
         if ($cargo === 'admin_horta_geral' &&
             $financeiro->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-            throw new Exception("Você não tem permissão para deletar este lançamento");
+            throw new AcessoNegadoException("Você não tem permissão para deletar este lançamento");
         }
 
         $data = [

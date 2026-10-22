@@ -4,7 +4,7 @@ Sobe o sistema completo (banco MySQL, backend PHP e frontend Vue) com um comando
 
 | Serviço | Endereço |
 |---|---|
-| Sistema | http://localhost:3000 (login `admin@email.com` / senha `admin`) |
+| Sistema | http://localhost:3000 (login `plataforma@gmail.com`, `associacao@gmail.com`, `horta@gmail.com` ou `canteirista@gmail.com`, senha `123456`) |
 | API | http://localhost:8181/api/v1 |
 | MySQL | `localhost:3307` (banco `hortas`, usuário `hortas`) |
 | phpMyAdmin (opcional) | http://localhost:8080 |

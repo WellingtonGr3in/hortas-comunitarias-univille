@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\PlanoModel;
 use App\Repositories\MensalidadeDaPlataformaRepository;
 use App\Repositories\PlanoRepository;
@@ -29,7 +30,7 @@ class PlanoService
 
     public function findAllWhere(array $payloadUsuarioLogado): Collection {
         if(!$this->isCargoAdminPlataforma($payloadUsuarioLogado)){
-            throw new Exception("Permissão de cargo 0 necessária | findAllWhere");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findAllWhere");
         }
         return $this->planoRepository->findAllWhere(['excluido' => 0]);
     }
@@ -38,7 +39,7 @@ class PlanoService
         if(!$this->isCargoAdminPlataforma($payloadUsuarioLogado) &&
             $payloadUsuarioLogado['usuario_uuid'] !== "NEW_ACCOUNT"
         ){
-            throw new Exception("Permissão de cargo 0 necessária | findByUuid");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findByUuid");
         }
 
         $plano = $this->planoRepository->findByUuid($uuid);
@@ -50,7 +51,7 @@ class PlanoService
     public function findBySlug(string $slug, array $payloadUsuarioLogado): ?PlanoModel {
         if(!$this->isCargoAdminPlataforma($payloadUsuarioLogado) &&
             $payloadUsuarioLogado['usuario_uuid'] !== "NEW_ACCOUNT"){
-            throw new Exception("Permissão de cargo 0 necessária | findBySlug");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findBySlug");
         }
         
         $plano = $this->planoRepository->findBySlug($slug);
@@ -63,7 +64,7 @@ class PlanoService
     public function findByUsuarioUuid(string $usuarioUuid, array $payloadUsuarioLogado): array
     {
         if(!$this->isCargoAdminPlataforma($payloadUsuarioLogado)){
-            throw new Exception("Permissão de cargo 0 necessária | findByUsuarioUuid");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findByUsuarioUuid");
         }
 
         $usuario = $this->usuarioService->findByUuid($usuarioUuid, $payloadUsuarioLogado);
@@ -80,7 +81,7 @@ class PlanoService
 
     public function create(array $data, array $payloadUsuarioLogado): PlanoModel {
         if(!$this->isCargoAdminPlataforma($payloadUsuarioLogado)){
-            throw new Exception("Permissão de cargo 0 necessária | create");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | create");
         }
 
         v::key('codigo', v::intVal()->min(0))
@@ -102,7 +103,7 @@ class PlanoService
 
     public function update(string $uuid, array $data, array $payloadUsuarioLogado): PlanoModel {
         if(!$this->isCargoAdminPlataforma($payloadUsuarioLogado)){
-            throw new Exception("Permissão de cargo 0 necessária | update");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | update");
         }
 
         $plano = $this->planoRepository->findByUuid($uuid);
@@ -127,7 +128,7 @@ class PlanoService
 
     public function delete(string $uuid, array $payloadUsuarioLogado): bool {
         if(!$this->isCargoAdminPlataforma($payloadUsuarioLogado)){
-            throw new Exception("Permissão de cargo 0 necessária | delete");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | delete");
         }
 
         $plano = $this->planoRepository->findByUuid($uuid);

@@ -37,10 +37,16 @@ class SessaoService
             throw new Exception('Acesso do usuário bloqueado');
         }
 
+        // Cargo desativado (ex.: dependente) não entra no sistema
+        $cargo = $usuario->cargo_uuid ? $this->cargoModel->find($usuario->cargo_uuid) : null;
+        if (!$cargo || $cargo->excluido) {
+            throw new Exception('Acesso do usuário bloqueado');
+        }
+
         $payload = [
             'usuario_uuid' => $usuario->uuid,
             'cargo_uuid' => $usuario->cargo_uuid,
-            'cargo_slug' => $this->cargoModel->find($usuario->cargo_uuid)?->slug,
+            'cargo_slug' => $cargo->slug,
             'associacao_uuid' => $usuario->associacao_uuid,
             'horta_uuid' => $usuario->horta_uuid,
             'exp' => time() + 7200,

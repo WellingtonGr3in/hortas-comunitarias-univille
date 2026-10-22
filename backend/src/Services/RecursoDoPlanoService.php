@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\RecursoDoPlanoModel;
 use App\Repositories\RecursoDoPlanoRepository;
 use Respect\Validation\Validator as v;
@@ -24,7 +25,7 @@ class RecursoDoPlanoService
 
     public function findAllWhere(array $payloadUsuarioLogado): Collection {
         if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | findAllWhere");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findAllWhere");
         } else {
             return $this->recursoDoPlanoRepository->findAllWhere(['excluido' => 0]);
         }
@@ -32,8 +33,7 @@ class RecursoDoPlanoService
 
     public function findByUuid(string $uuid,array $payloadUsuarioLogado): ?RecursoDoPlanoModel {
         if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-           echo "AQUI rdp ---------";
-            throw new Exception("Permissão de cargo 0 necessária | findByUuid");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findByUuid");
         } else {
             $recursoDoPlano = $this->recursoDoPlanoRepository->findByUuid($uuid);
             if(!$recursoDoPlano || $recursoDoPlano->excluido){
@@ -45,7 +45,7 @@ class RecursoDoPlanoService
 
     public function findByPlanoUuid(string $planoUuid, array $payloadUsuarioLogado): ?Collection {
         if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | findByPlanoUuid");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findByPlanoUuid");
         } else {     
             $plano = $this->planoService->findByUuid($planoUuid, $payloadUsuarioLogado);
             if(!$plano || $plano->excluido){
@@ -62,7 +62,7 @@ class RecursoDoPlanoService
 
     public function create(array $data, array $payloadUsuarioLogado): RecursoDoPlanoModel {
         if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | create");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | create");
         } else {
             v::key('nome_do_recurso', v::stringType()->notEmpty())
               ->key('quantidade', v::intType())
@@ -87,7 +87,7 @@ class RecursoDoPlanoService
 
     public function update(string $uuid, array $data, array $payloadUsuarioLogado): RecursoDoPlanoModel {
         if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | update");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | update");
         } else {
             
             $recursoDoPlano = $this->recursoDoPlanoRepository->findByUuid($uuid);
@@ -116,7 +116,7 @@ class RecursoDoPlanoService
 
     public function delete(string $uuid, array $payloadUsuarioLogado): bool {
         if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | delete");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | delete");
         } else {
             $recursoDoPlano = $this->recursoDoPlanoRepository->findByUuid($uuid);
             if (!$recursoDoPlano || $recursoDoPlano->excluido) {

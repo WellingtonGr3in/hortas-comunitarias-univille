@@ -4,7 +4,7 @@ use App\Controllers\CanteiristaController;
 use Slim\Routing\RouteCollectorProxy;
 
 return function(RouteCollectorProxy $app){
-    $app->group('/Canteiristas', function(RouteCollectorProxy $group){
+    $app->group('/canteiristas', function(RouteCollectorProxy $group){
         $group->get('', CanteiristaController::class.':list');
         // Rotas estáticas DEVEM vir antes de /{uuid} para evitar conflito de roteamento
         $group->get('/filtro', CanteiristaController::class.':filter');

@@ -19,8 +19,12 @@ echo ============================================================
 echo projeto iniciado com sucesso
 echo.
 echo url:   http://localhost:3000
-echo login: admin@email.com
-echo senha: admin
+echo.
+echo usuarios de teste (senha de todos: 123456)
+echo   plataforma@gmail.com    administrador da plataforma
+echo   associacao@gmail.com    administrador da associacao demonstracao
+echo   horta@gmail.com         administrador da horta demonstracao
+echo   canteirista@gmail.com   canteirista da horta demonstracao
 echo ============================================================
 echo.
 echo abrindo o sistema no navegador...

@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
+use App\Repositories\CanteiristaRepository;
 use App\Repositories\UsuarioRepository;
 use Respect\Validation\Validator as v;
 use Ramsey\Uuid\Uuid;
@@ -16,7 +18,17 @@ use Illuminate\Database\Eloquent\Collection;
 
 class UsuarioService
 {
+    // Cargos que cada admin pode atribuir a outros usuários (ninguém sobe acima do próprio cargo)
+    private const CARGOS_ATRIBUIVEIS = [
+        'admin_associacao_geral' => ['admin_associacao_geral', 'admin_horta_geral', 'canteirista'],
+        'admin_horta_geral' => ['canteirista'],
+    ];
+
+    // O canteirista só altera estes campos do próprio perfil
+    private const CAMPOS_PERFIL_CANTEIRISTA = ['email', 'telefone'];
+
     protected $usuarioRepository;
+    protected $canteiristaRepository;
     protected $cargoService;
     protected $associacaoService;
     protected $hortaService;
@@ -29,9 +41,11 @@ class UsuarioService
         AssociacaoService $associacaoService,
         HortaService $hortaService,
         EnderecoService $enderecoService,
-        ChaveService $chaveService
+        ChaveService $chaveService,
+        CanteiristaRepository $canteiristaRepository
     ) {
         $this->usuarioRepository = $usuarioRepository;
+        $this->canteiristaRepository = $canteiristaRepository;
         $this->cargoService = $cargoService;
         $this->associacaoService = $associacaoService;
         $this->hortaService = $hortaService;
@@ -41,26 +55,20 @@ class UsuarioService
 
     public function findAllWhere(array $payloadUsuarioLogado): Collection
     {
-        // TODO: Reativar verificação de permissões em produção
-        return $this->usuarioRepository->findAllWhere(['excluido' => 0]);
-
-        /*
         $cargo = $this->cargoService->findByUuidInternal($payloadUsuarioLogado['cargo_uuid']);
 
         switch ($cargo->slug) {
             case "admin_plataforma":
                 return $this->usuarioRepository->findAllWhere(['excluido' => 0]);
-                break;
             case 'admin_associacao_geral':
                 return $this->usuarioRepository->findAllWhere(['excluido' => 0, 'associacao_uuid' => $payloadUsuarioLogado['associacao_uuid']]);
-                break;
             case 'admin_horta_geral':
                 return $this->usuarioRepository->findAllWhere(['excluido' => 0, 'horta_uuid' => $payloadUsuarioLogado['horta_uuid']]);
-                break;
+            case 'canteirista':
+                return $this->usuarioRepository->findAllWhere(['excluido' => 0, 'uuid' => $payloadUsuarioLogado['usuario_uuid']]);
             default:
-                throw new Exception('Nenhuma informaçã de usuários encontrada');
+                throw new AcessoNegadoException('Permissão insuficiente para listar usuários');
         }
-        */
     }
 
     public function findByUuid(string $uuid, array $payloadUsuarioLogado): ?UsuarioModel
@@ -71,28 +79,28 @@ class UsuarioService
             throw new Exception('Usuário não encontrado');
         }
 
+        // Qualquer pessoa logada vê o próprio perfil
+        if ($usuario->uuid === $payloadUsuarioLogado['usuario_uuid']) {
+            return $usuario;
+        }
+
         $cargo = $this->cargoService->findByUuidInternal($payloadUsuarioLogado['cargo_uuid']);
 
         switch ($cargo->slug) {
             case "admin_plataforma":
-                return $usuario = $this->usuarioRepository->findByUuid($uuid);
-                break;
+                return $usuario;
             case 'admin_associacao_geral':
-                $usuario = $this->usuarioRepository->findByUuid($uuid);
-                if (!$usuario || $usuario->excluido || $usuario->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception('Usuário não encontrado');
+                if ($usuario->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
+                    throw new AcessoNegadoException('Usuário não pertence à sua associação');
                 }
                 return $usuario;
-                break;
             case 'admin_horta_geral':
-                $usuario = $this->usuarioRepository->findByUuid($uuid);
-                if (!$usuario || $usuario->excluido || $usuario->horta_uuid != $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception('Usuário não encontrado');
+                if ($usuario->horta_uuid != $payloadUsuarioLogado['horta_uuid']) {
+                    throw new AcessoNegadoException('Usuário não pertence à sua horta');
                 }
                 return $usuario;
-                break;
             default:
-                throw new Exception('Nenhuma informação de usuário encontrada');
+                throw new AcessoNegadoException('Você só pode ver o seu próprio perfil');
         }
     }
     public function findByEmail(string $email): ?UsuarioModel
@@ -164,6 +172,7 @@ class UsuarioService
             return $this->usuarioRepository->create($data);
         } else {
             $cargo = $this->cargoService->findByUuidInternal($payloadUsuarioLogado['cargo_uuid']);
+            $this->verificarCargoAtribuivel($cargo->slug, $data['cargo_uuid'] ?? null);
 
             switch ($cargo->slug) {
                 case "admin_plataforma":
@@ -367,70 +376,8 @@ class UsuarioService
                     return $this->usuarioRepository->create($data);
                     break;
                 default:
-                    throw new Exception('Não será possível criar o usuário');
+                    throw new AcessoNegadoException('Você não tem permissão para criar usuários');
             }
-            v::key('nome_completo', v::stringType()->notEmpty())
-                ->key('cpf', v::cpf())
-                ->key('email', v::email())
-                ->key('senha', v::stringType()->length(6, null))
-                ->key('dias_ausente', v::intVal()->positive())
-                ->key('data_de_nascimento', v::date())
-                ->key('apelido', v::stringType()->notEmpty())
-                ->key('taxa_associado_em_centavos', v::intVal()->positive(), false)
-                ->key('associacao_uuid', v::uuid(), false)
-                ->key('horta_uuid', v::uuid(), false)
-                ->key('cargo_uuid', v::uuid(), false)
-                ->key('chave_uuid', v::uuid(), false)
-                ->key('endereco_uuid', v::uuid(), false)
-                ->assert($data);
-
-            $email = $data['email'];
-            $usuarioComEsseEmail = $this->usuarioRepository->findByEmail($email);
-            if ($usuarioComEsseEmail) {
-                throw new Exception('Usuário com o email:' . $email . ' já existe');
-            }
-
-            $cpf = $data['cpf'];
-            $usuarioComEsseCPF = $this->usuarioRepository->findByCpf($cpf);
-            if ($usuarioComEsseCPF) {
-                throw new Exception('Usuário com o cpf:' . $cpf . ' já existe');
-            }
-
-            $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
-            foreach ($guarded as $g)
-                unset($data[$g]);
-
-            $data['uuid'] = Uuid::uuid1()->toString();
-            $data['senha'] = password_hash($data['senha'], PASSWORD_DEFAULT);
-            $data['status_de_acesso'] = 1;
-            $data['responsavel_da_conta'] = 0;
-            $data['data_bloqueio_acesso'] = null;
-            $data['usuario_associado_uuid'] = null;
-            $data['motivo_bloqueio_acesso'] = null;
-            $data['usuario_criador_uuid'] = $uuidUsuarioLogado;
-            $data['usuario_alterador_uuid'] = $uuidUsuarioLogado;
-
-            if (!empty($data['cargo_uuid'])) {
-                $this->cargoService->findByUuidInternal($data['cargo_uuid']);
-            }
-
-            if (!empty($data['associacao_uuid'])) {
-                $this->associacaoService->findByUuid($data['associacao_uuid'], $payloadUsuarioLogado);
-            }
-
-            if (!empty($data['horta_uuid'])) {
-                $this->hortaService->findByUuid($data['horta_uuid']);
-            }
-
-            if (!empty($data['endereco_uuid'])) {
-                $this->enderecoService->findByUuid($data['endereco_uuid']);
-            }
-
-            if (!empty($data['chave_uuid'])) {
-                $this->chaveService->findByUuid($data['chave_uuid']);
-            }
-
-            return $this->usuarioRepository->create($data);
         }
     }
 
@@ -444,6 +391,12 @@ class UsuarioService
 
         $cargo = $this->cargoService->findByUuidInternal($payloadUsuarioLogado['cargo_uuid']);
 
+        if ($cargo->slug === 'canteirista') {
+            return $this->updatePerfilCanteirista($usuario, $data, $payloadUsuarioLogado);
+        }
+
+        $this->verificarCargoAtribuivel($cargo->slug, $data['cargo_uuid'] ?? null);
+
         switch ($cargo->slug) {
             case "admin_plataforma":
                 // Admin plataforma pode alterar qualquer usuário
@@ -452,7 +405,7 @@ class UsuarioService
             case "admin_associacao_geral":
                 // Só pode alterar usuários da própria associação
                 if ($usuario->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception('Usuário não pertence à sua associação');
+                    throw new AcessoNegadoException('Usuário não pertence à sua associação');
                 }
                 // Garante que associação atribuída seja da mesma do usuário logado
                 if (!empty($data['associacao_uuid'])) {
@@ -477,7 +430,7 @@ class UsuarioService
             case "admin_horta_geral":
                 // Só pode alterar usuários da própria horta
                 if ($usuario->horta_uuid != $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception('Usuário não pertence à sua horta');
+                    throw new AcessoNegadoException('Usuário não pertence à sua horta');
                 }
                 if (!empty($data['horta_uuid']) && $data['horta_uuid'] != $payloadUsuarioLogado['horta_uuid']) {
                     throw new Exception('Não pode alterar para outra horta');
@@ -491,7 +444,7 @@ class UsuarioService
                 break;
 
             default:
-                throw new Exception('Não é possível alterar o usuário');
+                throw new AcessoNegadoException('Você não tem permissão para alterar este usuário');
         }
 
         // Continua validação comum
@@ -556,18 +509,18 @@ class UsuarioService
 
             case "admin_associacao_geral":
                 if ($usuario->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception('Usuário não pertence à sua associação');
+                    throw new AcessoNegadoException('Usuário não pertence à sua associação');
                 }
                 break;
 
             case "admin_horta_geral":
                 if ($usuario->horta_uuid != $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception('Usuário não pertence à sua horta');
+                    throw new AcessoNegadoException('Usuário não pertence à sua horta');
                 }
                 break;
 
             default:
-                throw new Exception('Não é possível deletar o usuário');
+                throw new AcessoNegadoException('Você não tem permissão para excluir usuários');
         }
 
         $data = [
@@ -576,6 +529,58 @@ class UsuarioService
         ];
 
         return $this->usuarioRepository->delete($usuario, $data);
+    }
+
+    // Canteirista edita só o próprio telefone e e-mail (o telefone fica no cadastro de canteirista)
+    private function updatePerfilCanteirista(UsuarioModel $usuario, array $data, array $payloadUsuarioLogado): UsuarioModel
+    {
+        if ($usuario->uuid !== $payloadUsuarioLogado['usuario_uuid']) {
+            throw new AcessoNegadoException('Você só pode alterar o seu próprio perfil');
+        }
+
+        $camposNaoPermitidos = array_diff(array_keys($data), self::CAMPOS_PERFIL_CANTEIRISTA);
+        if (!empty($camposNaoPermitidos)) {
+            throw new AcessoNegadoException('Você só pode alterar telefone e e-mail. Para mudar outros dados, fale com o administrador da sua horta');
+        }
+
+        v::key('email', v::email(), false)
+            ->key('telefone', v::stringType()->notEmpty(), false)
+            ->assert($data);
+
+        if (array_key_exists('telefone', $data)) {
+            $canteirista = $this->canteiristaRepository->findByUsuarioUuid($usuario->uuid);
+            if (!$canteirista) {
+                throw new Exception('Cadastro de canteirista não encontrado');
+            }
+            $this->canteiristaRepository->update($canteirista->uuid, [
+                'telefone' => $data['telefone'],
+                'usuario_alterador_uuid' => $usuario->uuid,
+            ]);
+        }
+
+        if (array_key_exists('email', $data) && $data['email'] !== $usuario->email) {
+            $outro = $this->usuarioRepository->findByEmail($data['email']);
+            if ($outro && $outro->uuid !== $usuario->uuid) {
+                throw new \InvalidArgumentException('Este e-mail já está em uso');
+            }
+            return $this->usuarioRepository->update($usuario, [
+                'email' => $data['email'],
+                'usuario_alterador_uuid' => $usuario->uuid,
+            ]);
+        }
+
+        return $usuario;
+    }
+
+    private function verificarCargoAtribuivel(string $cargoLogado, ?string $cargoUuidAtribuido): void
+    {
+        if (empty($cargoUuidAtribuido) || $cargoLogado === 'admin_plataforma') {
+            return;
+        }
+        $slugAtribuido = $this->cargoService->findByUuidInternal($cargoUuidAtribuido)->slug;
+        if (!in_array($slugAtribuido, self::CARGOS_ATRIBUIVEIS[$cargoLogado] ?? [], true)) {
+            throw new AcessoNegadoException('Você não pode atribuir este cargo');
+        }
     }
 
     /**

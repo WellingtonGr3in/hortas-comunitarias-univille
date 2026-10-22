@@ -13,7 +13,7 @@
           :class="{ 'is-invalid': errors.tipo }"
         >
           <option value="">Selecione o tipo</option>
-          <option value="aviso_geral">Aviso Geral</option>
+          <option v-if="podeAvisoGeral" value="aviso_geral">Aviso Geral</option>
           <option value="aviso_canteirista">Aviso para Canteirista Específico</option>
           <option value="evento_horta">Evento da Horta</option>
         </select>
@@ -204,6 +204,8 @@ export default {
 
     const canteiristas = computed(() => store.getters['canteiristas/allCanteiristas']);
     const hortas = computed(() => store.getters['hortas/allHortas']);
+    // Aviso Geral é só do administrador da plataforma
+    const podeAvisoGeral = computed(() => store.getters['auth/cargoSlug'] === 'admin_plataforma');
 
     onMounted(async () => {
       await store.dispatch('canteiristas/fetchCanteiristas');
@@ -314,6 +316,7 @@ export default {
     };
 
     return {
+      podeAvisoGeral,
       form,
       errors,
       loading,

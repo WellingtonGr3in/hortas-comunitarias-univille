@@ -159,7 +159,7 @@ class CanteiristaController
     }
 
     /**
-     * GET /Canteiristas/filtro
+     * GET /canteiristas/filtro
      *
      * Query params suportados:
      *  - nome_completo (string)
@@ -200,7 +200,7 @@ class CanteiristaController
     }
 
     /**
-     * GET /Canteiristas/estatisticas
+     * GET /canteiristas/estatisticas
      *
      * Query params opcionais:
      *  - meses (int) — janela em meses para a série temporal de criações. Default: 6.
