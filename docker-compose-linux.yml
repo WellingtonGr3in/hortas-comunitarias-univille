@@ -1,3 +1,5 @@
+# Usado pela CI. A senha do banco vem do ambiente (a CI gera uma aleatória a cada execução):
+#   DB_ROOT_PASSWORD=<senha> docker compose -f docker-compose-linux.yml up -d
 services:
   nginx:
     image: nginx:alpine
@@ -20,7 +22,7 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?defina DB_ROOT_PASSWORD}
       MYSQL_DATABASE: railway
     volumes:
       - mysql_data:/var/lib/mysql
@@ -86,7 +88,7 @@ services:
       - DB_HOST=mysql
       - DB_NAME=railway
       - DB_USER=root
-      - DB_PASS=root_password
+      - DB_PASS=${DB_ROOT_PASSWORD:?defina DB_ROOT_PASSWORD}
     deploy:
       resources:
         limits:

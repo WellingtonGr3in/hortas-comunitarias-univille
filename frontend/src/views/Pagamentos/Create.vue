@@ -152,16 +152,12 @@ export default {
     };
 
     const handleSubmit = async () => {
-      console.log('handleSubmit chamado');
-      console.log('Form data:', form);
       
       if (!validateForm()) {
-        console.log('Validação falhou:', errors);
         return;
       }
 
       loading.value = true;
-      console.log('Loading set to true');
       
       try {
         const payload = {
@@ -171,7 +167,6 @@ export default {
           data_pagamento: form.data_pagamento,
           observacao: form.observacao || null
         };
-        console.log('Payload a ser enviado:', payload);
         
         await store.dispatch('pagamentos/createPagamento', payload);
 
@@ -182,7 +177,6 @@ export default {
         alert('Erro ao cadastrar pagamento: ' + (error.message || 'Erro desconhecido'));
       } finally {
         loading.value = false;
-        console.log('Loading set to false');
       }
     };
 

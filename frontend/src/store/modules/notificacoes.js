@@ -79,10 +79,7 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       commit('SET_ERROR', null)
-      console.log('🔍 Store: Buscando notificação ID:', id)
       const response = await notificacoesService.getNotificacao(id)
-      console.log('📦 Store: Response do service:', response)
-      console.log('📊 Store: Response.data:', response.data)
       return response.data
     } catch (err) {
       console.error('❌ Store: Erro ao buscar:', err)
@@ -96,7 +93,6 @@ const actions = {
   async createNotificacao({ dispatch }, data) {
     try {
       const response = await notificacoesService.createNotificacao(data)
-      console.log('Notificação criada:', response)
       // Recarrega a lista após criar
       await dispatch('fetchNotificacoes')
       return { success: true, data: response }
@@ -109,7 +105,6 @@ const actions = {
   async updateNotificacao({ dispatch }, { id, data }) {
     try {
       const response = await notificacoesService.updateNotificacao(id, data)
-      console.log('Notificação atualizada:', response)
       // Recarrega a lista após atualizar
       await dispatch('fetchNotificacoes')
       return { success: true, data: response }

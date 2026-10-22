@@ -100,7 +100,7 @@ make fresh          # Reinstalação completa
 - Database: `railway`
 - User: `hortas_user`
 - Password: `hortas_password`
-- Root password: `root_password`
+- Root password: a que você definir em `DB_ROOT_PASSWORD` (nenhuma senha fica no repositório)
 
 ## 🔧 Desenvolvimento
 

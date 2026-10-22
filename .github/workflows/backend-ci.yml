@@ -25,6 +25,10 @@ jobs:
       - name: Setup .envs
         run: |
           cp backend/.env.example backend/.env
+          # Senha do banco gerada na hora: nenhuma credencial fica no repositório
+          DB_ROOT_PASSWORD=$(openssl rand -hex 16)
+          echo "::add-mask::$DB_ROOT_PASSWORD"
+          echo "DB_ROOT_PASSWORD=$DB_ROOT_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -36,7 +40,7 @@ jobs:
       - name: Esperar MySQL
         run: |
           for i in {1..30}; do
-            if docker exec hortas_mysql mysqladmin ping -h localhost -u root -proot_password --silent; then
+            if docker exec hortas_mysql mysqladmin ping -h localhost -u root -p"$DB_ROOT_PASSWORD" --silent; then
               echo "MySQL pronto."
               break
             fi

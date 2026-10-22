@@ -173,16 +173,12 @@ export default {
     };
 
     const handleSubmit = async () => {
-      console.log('handleSubmit (edit) chamado');
-      console.log('Form data:', form);
       
       if (!validateForm()) {
-        console.log('Validação falhou:', errors);
         return;
       }
 
       saving.value = true;
-      console.log('Saving set to true');
       
       try {
         const pagamentoId = route.params.id;
@@ -194,7 +190,6 @@ export default {
           data_pagamento: form.data_pagamento,
           observacao: form.observacao || null
         };
-        console.log('Payload a ser enviado:', payload);
         
         await store.dispatch('pagamentos/updatePagamento', payload);
 
@@ -205,7 +200,6 @@ export default {
         alert('Erro ao atualizar pagamento: ' + (error.message || 'Erro desconhecido'));
       } finally {
         saving.value = false;
-        console.log('Saving set to false');
       }
     };
 
