@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\MensalidadeDaPlataformaModel;
 use App\Repositories\MensalidadeDaPlataformaRepository;
 use Respect\Validation\Validator as v;
@@ -46,7 +47,7 @@ class MensalidadeDaPlataformaService
     public function findAllWhere(array $payloadUsuarioLogado): Collection {
         if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado) &&
             !$this->isCargoAdminASsociacao($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | findAllWhere");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findAllWhere");
         } else if ($this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
             return $this->mensalidadeDaPlataformaRepository->findAllWhere(['excluido' => 0]);
         } else {
@@ -59,7 +60,7 @@ class MensalidadeDaPlataformaService
             !$this->isCargoAdminASsociacao($payloadUsuarioLogado)) {
 
                 
-                throw new Exception("Permissão de cargo 0 necessária | findByUuid");
+                throw new AcessoNegadoException("Permissão de cargo 0 necessária | findByUuid");
         } else { 
             $mensalidadeDaPlataforma = $this->mensalidadeDaPlataformaRepository->findByUuid($uuid);
             if(!$mensalidadeDaPlataforma || $mensalidadeDaPlataforma->excluido){
@@ -73,7 +74,7 @@ class MensalidadeDaPlataformaService
     public function findByUsuarioUuid(string $usuarioUuid, array $payloadUsuarioLogado): Collection
     {
         if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | findByUsuarioUuid");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findByUsuarioUuid");
         } else { 
             $usuario = $this->usuarioService->findByUuid($usuarioUuid, $payloadUsuarioLogado);
             if (!$usuario || $usuario->excluido) {
@@ -114,7 +115,7 @@ class MensalidadeDaPlataformaService
 
             return $this->mensalidadeDaPlataformaRepository->create($data);
         } else if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | create");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | create");
         } else { 
             $data['status'] = $data['status'] ?? self::STATUS_AGUARDANDO_PAGAMENTO;
             $data['dias_atraso'] = $data['dias_atraso'] ?? 0;
@@ -157,7 +158,7 @@ class MensalidadeDaPlataformaService
 
         if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado) &&
             !$this->isCargoAdminASsociacao($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0,1 necessária | update");
+            throw new AcessoNegadoException("Permissão de cargo 0,1 necessária | update");
         } else {
 
             $mensalidadeDaPlataforma = $this->mensalidadeDaPlataformaRepository->findByUuid($uuid);
@@ -200,7 +201,7 @@ class MensalidadeDaPlataformaService
 
     public function delete(string $uuid, array $payloadUsuarioLogado): bool {
         if (!$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | delete");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | delete");
         } else {
             $mensalidadeDaPlataforma = $this->mensalidadeDaPlataformaRepository->findByUuid($uuid);
             if (!$mensalidadeDaPlataforma || $mensalidadeDaPlataforma->excluido) {

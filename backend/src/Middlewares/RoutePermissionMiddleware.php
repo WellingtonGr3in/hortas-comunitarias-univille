@@ -46,16 +46,16 @@
             // Se não autenticado, bloqueia
             if (!$usuarioUuid) {
                 $response = new Response();
-                $response->getBody()->write(json_encode(['error' => 'Usuário não autenticado']));
+                $response->getBody()->write(json_encode(['error' => 'Usuário não autenticado', 'status' => 401], JSON_UNESCAPED_UNICODE));
                 return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
             }
 
             // Verifica permissões
             $permissoesNecessarias = $this->permissionsMap->getRequiredPermissions($routeIdentifier);
 
-            // Rota sem permissão explícita -> deixar passar
+            // Rota sem permissão explícita -> fechado por padrão
             if ($permissoesNecessarias === null) {
-                return $handler->handle($request);
+                return $this->acessoNegado();
             }
 
             $payloadUsuarioLogado = [
@@ -65,20 +65,32 @@
                 'horta_uuid'      => $request->getAttribute('horta_uuid'),
             ];
 
-            $permissoesDoUsuario = $this->permissaoService->findByUuid($usuarioUuid, $payloadUsuarioLogado);
+            try {
+                $permissoesDoUsuario = $this->permissaoService->findByUuid($usuarioUuid, $payloadUsuarioLogado);
+            } catch (\Exception $e) {
+                // Cargo sem nenhuma permissão (ex.: cargo desativado)
+                return $this->acessoNegado();
+            }
 
             foreach ($permissoesNecessarias as $slug) {
                 if (!$permissoesDoUsuario->contains('slug', $slug)) {
-                    $response = new Response();
-                    $response->getBody()->write(json_encode([
-                        'error' => 'Acesso negado',
-                        'missing_permission' => $slug
-                    ]));
-                    return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
+                    return $this->acessoNegado($slug);
                 }
             }
 
             return $handler->handle($request);
+        }
+
+        private function acessoNegado(?string $permissaoFaltante = null): Response
+        {
+            $corpo = ['error' => 'Acesso negado', 'status' => 403];
+            if ($permissaoFaltante !== null) {
+                $corpo['missing_permission'] = $permissaoFaltante;
+            }
+
+            $response = new Response();
+            $response->getBody()->write(json_encode($corpo, JSON_UNESCAPED_UNICODE));
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         private function buildRouteIdentifier(string $path, string $method): string

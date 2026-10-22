@@ -9,6 +9,7 @@ on:
       - 'docker/nginx/**'
       - 'docker-compose-linux.yml'
       - 'postman/smoke-tests.postman_collection.json'
+      - 'postman/permissoes-por-perfil.postman_collection.json'
       - 'postman/dummy-env.postman_environment.json'
       - '.github/workflows/backend-ci.yml'
   workflow_dispatch:
@@ -75,6 +76,13 @@ jobs:
           npm install -g newman
           npm install -g newman-reporter-htmlextra
 
+      # Roda antes dos smoke tests, que apagam dados no final. A coleção cria os próprios dados.
+      - name: Rodar testes de permissões por perfil
+        id: permissoes
+        continue-on-error: true
+        run: |
+          newman run "postman/permissoes-por-perfil.postman_collection.json"             --env-var "BASE_URL=http://localhost:8181/api"             -r cli,htmlextra,json             --reporter-htmlextra-export permissoes.html             --reporter-json-export permissoes.json
+
       - name: Rodar testes no Newman
         id: newman
         continue-on-error: true
@@ -91,7 +99,19 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: newman-html-report
-          path: results.html
+          path: |
+            results.html
+            permissoes.html
+
+      # Permissão errada é falha de segurança: bloqueia o PR (sem approval manual)
+      - name: Checar permissões por perfil
+        if: always()
+        run: |
+          if [ ! -f permissoes.json ] || grep -q '"failed": [1-9]' permissoes.json; then
+            echo "::error::Testes de permissões por perfil falharam. Veja o artefato permissoes.html."
+            exit 1
+          fi
+          echo "✓ Permissões por perfil OK"
 
       - name: Checar results
         if: always()

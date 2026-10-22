@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\CanteiroEUsuarioModel;
 use App\Repositories\CanteiroEUsuarioRepository;
 use Respect\Validation\Validator as v;
@@ -38,17 +39,17 @@ class CanteiroEUsuarioService
 
             case 'admin_associacao_geral':
                 // usuários e canteiros vinculados à associação do usuário logado
-                $usuarios = $this->usuarioService->findAllWhere(['associacao_uuid' => $payloadUsuarioLogado['associacao_uuid']]);
+                $usuarios = $this->usuarioService->findAllWhere($payloadUsuarioLogado);
                 $usuariosUuids = $usuarios->pluck('uuid')->toArray();
                 return $this->canteiroEUsuarioRepository->findAllWhere(['excluido' => 0])
-                    ->filter(fn($rel) => in_array($rel->usuario_uuid, $usuariosUuids));
+                    ->filter(fn($rel) => in_array($rel->usuario_uuid, $usuariosUuids))->values();
 
             case 'admin_horta_geral':
                 // apenas canteiros da sua horta
-                $canteiros = $this->canteiroService->findAllWhere(['horta_uuid' => $payloadUsuarioLogado['horta_uuid']]);
+                $canteiros = $this->canteiroService->findAllWhere($payloadUsuarioLogado);
                 $canteirosUuids = $canteiros->pluck('uuid')->toArray();
                 return $this->canteiroEUsuarioRepository->findAllWhere(['excluido' => 0])
-                    ->filter(fn($rel) => in_array($rel->canteiro_uuid, $canteirosUuids));
+                    ->filter(fn($rel) => in_array($rel->canteiro_uuid, $canteirosUuids))->values();
 
             default:
                 // leitura apenas limitada ao próprio usuário
@@ -75,20 +76,20 @@ class CanteiroEUsuarioService
             case 'admin_associacao_geral':
                 $usuario = $this->usuarioService->findByUuid($rel->usuario_uuid, $payloadUsuarioLogado);
                 if ($usuario->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar este vínculo");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar este vínculo");
                 }
                 return $rel;
 
             case 'admin_horta_geral':
                 $canteiro = $this->canteiroService->findByUuid($rel->canteiro_uuid, $payloadUsuarioLogado);
                 if ($canteiro->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar este vínculo");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar este vínculo");
                 }
                 return $rel;
 
             default:
                 if ($rel->usuario_uuid !== $payloadUsuarioLogado['usuario_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar este vínculo");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar este vínculo");
                 }
                 return $rel;
         }
@@ -98,7 +99,7 @@ class CanteiroEUsuarioService
     {
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
         if (!in_array($cargo, ['admin_plataforma','admin_associacao_geral','admin_horta_geral'])) {
-            throw new Exception("Permissão insuficiente | create");
+            throw new AcessoNegadoException("Permissão insuficiente | create");
         }
 
         v::key('usuario_uuid', v::uuid())
@@ -124,13 +125,13 @@ class CanteiroEUsuarioService
         switch ($cargo) {
             case 'admin_associacao_geral':
                 if ($usuario->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você só pode vincular usuários da sua associação");
+                    throw new AcessoNegadoException("Você só pode vincular usuários da sua associação");
                 }
                 break;
 
             case 'admin_horta_geral':
                 if ($canteiro->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você só pode vincular usuários em canteiros da sua horta");
+                    throw new AcessoNegadoException("Você só pode vincular usuários em canteiros da sua horta");
                 }
                 break;
         }
@@ -142,7 +143,7 @@ class CanteiroEUsuarioService
     {
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
         if (!in_array($cargo, ['admin_plataforma','admin_associacao_geral','admin_horta_geral'])) {
-            throw new Exception("Permissão insuficiente | update");
+            throw new AcessoNegadoException("Permissão insuficiente | update");
         }
 
         $rel = $this->canteiroEUsuarioRepository->findByUuid($uuid);
@@ -156,13 +157,13 @@ class CanteiroEUsuarioService
         switch ($cargo) {
             case 'admin_associacao_geral':
                 if ($usuario->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não pode editar vínculos de outra associação");
+                    throw new AcessoNegadoException("Você não pode editar vínculos de outra associação");
                 }
                 break;
 
             case 'admin_horta_geral':
                 if ($canteiro->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não pode editar vínculos de outra horta");
+                    throw new AcessoNegadoException("Você não pode editar vínculos de outra horta");
                 }
                 break;
         }
@@ -189,7 +190,7 @@ class CanteiroEUsuarioService
     {
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
         if (!in_array($cargo, ['admin_plataforma','admin_associacao_geral','admin_horta_geral'])) {
-            throw new Exception("Permissão insuficiente | delete");
+            throw new AcessoNegadoException("Permissão insuficiente | delete");
         }
 
         $rel = $this->canteiroEUsuarioRepository->findByUuid($uuid);
@@ -203,13 +204,13 @@ class CanteiroEUsuarioService
         switch ($cargo) {
             case 'admin_associacao_geral':
                 if ($usuario->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não pode excluir vínculos de outra associação");
+                    throw new AcessoNegadoException("Você não pode excluir vínculos de outra associação");
                 }
                 break;
 
             case 'admin_horta_geral':
                 if ($canteiro->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não pode excluir vínculos de outra horta");
+                    throw new AcessoNegadoException("Você não pode excluir vínculos de outra horta");
                 }
                 break;
         }

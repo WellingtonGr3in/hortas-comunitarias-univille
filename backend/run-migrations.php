@@ -49,6 +49,12 @@ foreach ($files as $file) {
     $migrationName = pathinfo($file, PATHINFO_FILENAME);
     $extension = pathinfo($file, PATHINFO_EXTENSION);
 
+    // Dados de teste (_DEV_, com senhas conhecidas) só entram no ambiente local
+    if (str_contains($migrationName, '_DEV_') && ($_ENV['APP_ENV'] ?? '') !== 'development') {
+        echo "Migration {$migrationName} ignorada (só roda com APP_ENV=development).\n";
+        continue;
+    }
+
     // Verifica se já rodou
     $executed = $capsule::table('migrations')->where('migration', $migrationName)->exists();
     if ($executed) {

@@ -10,13 +10,15 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { Button, Input } from '../../components/common';
 import { COLORS } from '../../constants/colors';
-import { validateEmail } from '../../utils/validators';
+import { validateEmail, validatePhone } from '../../utils/validators';
+import { updateUsuario } from '../../services/usuarios.service';
 
 const EditProfileScreen = ({ navigation }) => {
   const { user, updateUser } = useAuth();
+  // O canteirista só pode alterar o próprio e-mail e telefone (Manual do Usuário)
   const [formData, setFormData] = useState({
-    nome_completo: '',
     email: '',
+    telefone: '',
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -24,8 +26,8 @@ const EditProfileScreen = ({ navigation }) => {
   useEffect(() => {
     if (user) {
       setFormData({
-        nome_completo: user.nome_completo || '',
         email: user.email || '',
+        telefone: user.telefone || '',
       });
     }
   }, [user]);
@@ -38,14 +40,14 @@ const EditProfileScreen = ({ navigation }) => {
   const validate = () => {
     const newErrors = {};
 
-    if (!formData.nome_completo.trim()) {
-      newErrors.nome_completo = 'Nome é obrigatório';
-    }
-
     if (!formData.email.trim()) {
       newErrors.email = 'E-mail é obrigatório';
     } else if (!validateEmail(formData.email)) {
       newErrors.email = 'E-mail inválido';
+    }
+
+    if (formData.telefone.trim() && !validatePhone(formData.telefone)) {
+      newErrors.telefone = 'Telefone inválido';
     }
 
     setErrors(newErrors);
@@ -57,8 +59,13 @@ const EditProfileScreen = ({ navigation }) => {
 
     setLoading(true);
     try {
-      const updatedUser = { ...user, ...formData };
-      const result = await updateUser(updatedUser);
+      const dados = { email: formData.email.trim() };
+      if (formData.telefone.trim()) {
+        dados.telefone = formData.telefone.trim();
+      }
+      await updateUsuario(user.uuid, dados);
+
+      const result = await updateUser({ ...user, ...dados });
       
       if (result.success) {
         Alert.alert('Sucesso', 'Perfil atualizado com sucesso', [
@@ -68,7 +75,7 @@ const EditProfileScreen = ({ navigation }) => {
         Alert.alert('Erro', result.message);
       }
     } catch (error) {
-      Alert.alert('Erro', 'Ocorreu um erro ao atualizar o perfil');
+      Alert.alert('Erro', error.message || 'Ocorreu um erro ao atualizar o perfil');
     } finally {
       setLoading(false);
     }
@@ -85,15 +92,6 @@ const EditProfileScreen = ({ navigation }) => {
         keyboardShouldPersistTaps="handled"
       >
         <Input
-          label="Nome Completo"
-          value={formData.nome_completo}
-          onChangeText={(text) => updateField('nome_completo', text)}
-          placeholder="Digite seu nome completo"
-          error={errors.nome_completo}
-          leftIcon="person-outline"
-        />
-
-        <Input
           label="E-mail"
           value={formData.email}
           onChangeText={(text) => updateField('email', text)}
@@ -102,6 +100,16 @@ const EditProfileScreen = ({ navigation }) => {
           autoCapitalize="none"
           error={errors.email}
           leftIcon="mail-outline"
+        />
+
+        <Input
+          label="Telefone"
+          value={formData.telefone}
+          onChangeText={(text) => updateField('telefone', text)}
+          placeholder="(47) 99999-9999"
+          keyboardType="phone-pad"
+          error={errors.telefone}
+          leftIcon="call-outline"
         />
 
         <Button

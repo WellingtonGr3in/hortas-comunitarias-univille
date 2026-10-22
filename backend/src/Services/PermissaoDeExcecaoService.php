@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\PermissaoDeExcecaoModel;
 use App\Repositories\PermissaoDeExcecaoRepository;
 use Respect\Validation\Validator as v;
@@ -27,7 +28,7 @@ class PermissaoDeExcecaoService
     public function findAllWhere(array $payloadUsuarioLogado): Collection
     {       if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | findAllWhere");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findAllWhere");
         } 
 
         return $this->permissaoDeExcecaoRepository->findAllWhere(['excluido' => 0]);
@@ -36,7 +37,7 @@ class PermissaoDeExcecaoService
     public function findByUuid(string $uuid, array $payloadUsuarioLogado): ?PermissaoDeExcecaoModel
     {       if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-                throw new Exception("Permissão de cargo 0 necessária | findByUuid");
+                throw new AcessoNegadoException("Permissão de cargo 0 necessária | findByUuid");
         } 
 
         $permissaoDeExcecao = $this->permissaoDeExcecaoRepository->findByUuid($uuid);
@@ -49,7 +50,7 @@ class PermissaoDeExcecaoService
     public function findByUserUuid(string $uuid, array $payloadUsuarioLogado): Collection
 {       if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | findByUserUuid");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findByUserUuid");
         } 
 
         $permissoesDeExcecaoDoUsuario = $this->permissaoDeExcecaoRepository->findByUserUuid($uuid);
@@ -59,7 +60,7 @@ class PermissaoDeExcecaoService
     public function create(array $data, array $payloadUsuarioLogado): PermissaoDeExcecaoModel
     {       if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | create");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | create");
         } 
 
         v::key('usuario_uuid', v::uuid())
@@ -89,7 +90,7 @@ class PermissaoDeExcecaoService
     public function update(string $uuid, array $data, array $payloadUsuarioLogado): PermissaoDeExcecaoModel
     {       if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | update");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | update");
         } 
 
         $permissaoDeExcecao= $this->permissaoDeExcecaoRepository->findByUuid($uuid);
@@ -119,7 +120,7 @@ class PermissaoDeExcecaoService
     public function delete(string $uuid, array $payloadUsuarioLogado): bool {
         if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | delete");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | delete");
         } 
 
         $permissaoDeExcecao = $this->permissaoDeExcecaoRepository->findByUuid($uuid);

@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\ItemDoInventarioModel;
 use App\Repositories\ItemDoInventarioRepository;
 use App\Repositories\MovimentacaoDoInventarioRepository;
@@ -56,7 +57,7 @@ class ItemDoInventarioService
                 ]);
 
             default:
-                throw new Exception("Permissão insuficiente | findAllWhere");
+                throw new AcessoNegadoException("Permissão insuficiente | findAllWhere");
         }
     }
 
@@ -91,12 +92,12 @@ class ItemDoInventarioService
 
             case 'admin_associacao_geral':
                 if ($associacaoUuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar o inventário desta associação");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar o inventário desta associação");
                 }
                 break;
 
             default:
-                throw new Exception("Permissão insuficiente | findByAssociacaoUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByAssociacaoUuid");
         }
 
         return $this->itemDoInventarioRepository->findByAssociacaoUuid($associacaoUuid);
@@ -220,14 +221,14 @@ class ItemDoInventarioService
                     $horta = $this->hortaService->findByUuidForValidation($hortaUuid);
                     if ($horta && !$horta->excluido && $horta->associacao_vinculada_uuid === $payloadUsuarioLogado['associacao_uuid']) return;
                 }
-                throw new Exception("Você não tem permissão para acessar este inventário");
+                throw new AcessoNegadoException("Você não tem permissão para acessar este inventário");
 
             case 'admin_horta_geral':
                 if ($hortaUuid && $hortaUuid === $payloadUsuarioLogado['horta_uuid']) return;
-                throw new Exception("Você não tem permissão para acessar este inventário");
+                throw new AcessoNegadoException("Você não tem permissão para acessar este inventário");
 
             default:
-                throw new Exception("Permissão insuficiente | inventário");
+                throw new AcessoNegadoException("Permissão insuficiente | inventário");
         }
     }
 
@@ -235,7 +236,7 @@ class ItemDoInventarioService
     {
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
         if (!in_array($cargo, ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'], true)) {
-            throw new Exception("Permissão insuficiente | inventário");
+            throw new AcessoNegadoException("Permissão insuficiente | inventário");
         }
     }
 

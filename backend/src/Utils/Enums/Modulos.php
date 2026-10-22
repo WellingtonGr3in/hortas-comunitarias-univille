@@ -26,4 +26,7 @@ enum Modulos: int
     // 19 a 21 já são usados no seed (permissões do usuário, canteiristas, canteiristas e canteiros).
     case ITENS_DO_INVENTARIO = 22;
     case MOVIMENTACOES_DO_INVENTARIO = 23;
+    case DEPENDENTES = 24;
+    case PAGAMENTOS = 25;
+    case NOTIFICACOES = 26;
 }

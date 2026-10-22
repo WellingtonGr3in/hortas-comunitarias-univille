@@ -25,10 +25,24 @@ class RoutePermissionMap
 
         // ==== Canteiros ====
         '/canteiros GET'                                            => ['canteiros_get'],
+        '/canteiros/search GET'                                     => ['canteiros_get'],
+        '/canteiros/summary/meus-canteiros GET'                     => ['canteiros_get'],
+        '/canteiros/summary/admin GET'                              => ['canteiros_get'],
         '/canteiros/{uuid} GET'                                     => ['canteiros_get_uuid'],
         '/canteiros POST'                                           => ['canteiros_post'],
         '/canteiros/{uuid} PUT'                                     => ['canteiros_put'],
         '/canteiros/{uuid} DELETE'                                  => ['canteiros_delete'],
+
+        // ==== Canteiristas ====
+        '/canteiristas GET'                                         => ['canteiristas_get'],
+        '/canteiristas/filtro GET'                                  => ['canteiristas_get'],
+        '/canteiristas/estatisticas GET'                            => ['canteiristas_get'],
+        '/canteiristas/{uuid} GET'                                  => ['canteiristas_get_uuid'],
+        '/canteiristas POST'                                        => ['canteiristas_post'],
+        '/canteiristas/{uuid} PUT'                                  => ['canteiristas_put'],
+        '/canteiristas/{uuid}/ativar PATCH'                         => ['canteiristas_put'],
+        '/canteiristas/{uuid}/desativar PATCH'                      => ['canteiristas_put'],
+        '/canteiristas/{uuid} DELETE'                               => ['canteiristas_delete'],
 
         // ==== Cargos ====
         '/cargos GET'                                               => ['cargos_get'],
@@ -52,6 +66,13 @@ class RoutePermissionMap
         '/chaves POST'                                              => ['chaves_post'],
         '/chaves/{uuid} PUT'                                        => ['chaves_put'],
         '/chaves/{uuid} DELETE'                                     => ['chaves_delete'],
+
+        // ==== Dependentes ====
+        '/dependentes GET'                                          => ['dependentes_get'],
+        '/dependentes/{uuid} GET'                                   => ['dependentes_get_uuid'],
+        '/dependentes POST'                                         => ['dependentes_post'],
+        '/dependentes/{uuid} PUT'                                   => ['dependentes_put'],
+        '/dependentes/{uuid} DELETE'                                => ['dependentes_delete'],
 
         // ==== Endereços ====
         '/enderecos GET'                                            => ['enderecos_get'],
@@ -117,10 +138,28 @@ class RoutePermissionMap
         // ==== Mensalidades da Associação ====
         '/mensalidades-da-associacao GET'                           => ['mensalidades_da_associacao_get'],
         '/mensalidades-da-associacao/{uuid} GET'                    => ['mensalidades_da_associacao_get_uuid'],
+        '/mensalidades-da-associacao/associacao/{uuid} GET'         => ['mensalidades_da_associacao_get_associacao'],
         '/mensalidades-da-associacao/usuario/{uuid} GET'            => ['mensalidades_da_associacao_get_usuario'],
         '/mensalidades-da-associacao POST'                          => ['mensalidades_da_associacao_post'],
         '/mensalidades-da-associacao/{uuid} PUT'                    => ['mensalidades_da_associacao_put'],
         '/mensalidades-da-associacao/{uuid} DELETE'                 => ['mensalidades_da_associacao_delete'],
+
+        // ==== Notificações ====
+        '/notificacoes GET'                                         => ['notificacoes_get'],
+        '/notificacoes/ativas GET'                                  => ['notificacoes_get'],
+        '/notificacoes/{uuid} GET'                                  => ['notificacoes_get'],
+        '/notificacoes POST'                                        => ['notificacoes_post'],
+        '/notificacoes/marcar-todas-lidas POST'                     => ['notificacoes_marcar_lida'],
+        '/notificacoes/{uuid}/marcar-lida POST'                     => ['notificacoes_marcar_lida'],
+        '/notificacoes/{uuid} PUT'                                  => ['notificacoes_put'],
+        '/notificacoes/{uuid} DELETE'                               => ['notificacoes_delete'],
+
+        // ==== Pagamentos ====
+        '/pagamentos GET'                                           => ['pagamentos_get'],
+        '/pagamentos/{uuid} GET'                                    => ['pagamentos_get_uuid'],
+        '/pagamentos POST'                                          => ['pagamentos_post'],
+        '/pagamentos/{uuid} PUT'                                    => ['pagamentos_put'],
+        '/pagamentos/{uuid} DELETE'                                 => ['pagamentos_delete'],
 
         // ==== Permissões de Cargo ====
         '/permissoes-de-cargo GET'                                  => ['permissoes_de_cargo_get'],
@@ -171,6 +210,7 @@ class RoutePermissionMap
         '/usuarios/{uuid} DELETE'                                   => ['usuarios_delete'],
     ];
 
+    // null = rota fora do mapa; o middleware nega o acesso nesse caso.
     public function getRequiredPermissions(string $routeIdentifier): ?array
     {
         return $this->map[$routeIdentifier] ?? null;

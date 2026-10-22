@@ -6,7 +6,7 @@
         <div class="text-muted">Gerencie os dependentes vinculados à sua conta</div>
       </div>
 
-      <div>
+      <div v-if="podeGerenciar">
         <router-link to="/dependentes/criar" class="btn btn-success">
           <i class="fa fa-user-plus"></i>&nbsp;Adicionar Dependente
         </router-link>
@@ -33,6 +33,7 @@
             v-for="d in dependentes"
             :key="d.id"
             :dependente="d"
+            :pode-editar="podeGerenciar"
             @edit="onEdit"
             @delete="onDelete"
           />
@@ -47,6 +48,7 @@
 import { mapGetters } from 'vuex'
 import DependentesSummary from '@/components/DependentesSummary.vue'
 import DependenteItem from '@/components/DependenteItem.vue'
+import { ehAdmin } from '@/utils/permissoes'
 
 export default {
   name: 'DependentesList',
@@ -57,6 +59,8 @@ export default {
   computed: {
     ...mapGetters('dependentes', ['allDependentes', 'isLoading']),
     dependentes() { return this.allDependentes },
+    // Canteirista só consulta; quem cadastra e muda é o administrador
+    podeGerenciar() { return ehAdmin(this.$store.getters['auth/cargoSlug']) },
     total() { return this.dependentes ? this.dependentes.length : 0 },
     ativos() { return this.dependentes ? this.dependentes.filter(d => d.ativo).length : 0 },
     menores() { return this.dependentes ? this.dependentes.filter(d => d.idade && d.idade < 18).length : 0 }

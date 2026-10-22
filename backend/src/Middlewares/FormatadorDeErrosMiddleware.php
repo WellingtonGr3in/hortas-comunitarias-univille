@@ -2,6 +2,7 @@
 
 namespace App\Middlewares;
 
+use App\Exceptions\AcessoNegadoException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -24,6 +25,10 @@ class FormatadorDeErrosMiddleware
             ], JSON_UNESCAPED_UNICODE));
             return $response->withHeader('Content-Type', 'application/json')
                 ->withStatus(422);
+        } catch (AcessoNegadoException $e) {
+            $response = new \Slim\Psr7\Response();
+            $response->getBody()->write(json_encode(['error' => $e->getMessage(), 'status' => 403], JSON_UNESCAPED_UNICODE));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
         } catch (\InvalidArgumentException $e) {
             $response = new \Slim\Psr7\Response();
             $response->getBody()->write(json_encode(['error' => $e->getMessage(), 'status' => 422], JSON_UNESCAPED_UNICODE));

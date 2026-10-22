@@ -7,7 +7,7 @@ import api from './api';
 
 export const getAll = async () => {
   try {
-    const response = await api.get('/carteiristas');
+    const response = await api.get('/canteiristas');
     return response.data;
   } catch (error) {
     throw error;
@@ -16,7 +16,7 @@ export const getAll = async () => {
 
 export const getById = async (id) => {
   try {
-    const response = await api.get(`/carteiristas/${id}`);
+    const response = await api.get(`/canteiristas/${id}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -25,7 +25,7 @@ export const getById = async (id) => {
 
 export const create = async (carteiristaData) => {
   try {
-    const response = await api.post('/carteiristas', carteiristaData);
+    const response = await api.post('/canteiristas', carteiristaData);
     return response.data;
   } catch (error) {
     throw error;
@@ -34,7 +34,7 @@ export const create = async (carteiristaData) => {
 
 export const update = async (id, carteiristaData) => {
   try {
-    const response = await api.put(`/carteiristas/${id}`, carteiristaData);
+    const response = await api.put(`/canteiristas/${id}`, carteiristaData);
     return response.data;
   } catch (error) {
     throw error;
@@ -43,7 +43,7 @@ export const update = async (id, carteiristaData) => {
 
 export const remove = async (id) => {
   try {
-    const response = await api.delete(`/carteiristas/${id}`);
+    const response = await api.delete(`/canteiristas/${id}`);
     return response.data;
   } catch (error) {
     throw error;

@@ -6,7 +6,7 @@
         <p class="text-muted mb-0">Controle geral dos canteiros comunitários</p>
       </div>
 
-      <router-link to="/canteiros/criar" class="btn btn-success">
+      <router-link v-if="podeGerenciar" to="/canteiros/criar" class="btn btn-success">
         + Novo Canteiro
       </router-link>
     </div>
@@ -117,11 +117,11 @@
                   Visualizar
                 </button>
 
-                <router-link :to="`/canteiros/${c.id}/editar`" class="btn btn-sm btn-primary me-1">
+                <router-link v-if="podeGerenciar" :to="`/canteiros/${c.id}/editar`" class="btn btn-sm btn-primary me-1">
                   Editar
                 </router-link>
 
-                <button class="btn btn-sm btn-danger" @click="excluir(c)">
+                <button v-if="podeGerenciar" class="btn btn-sm btn-danger" @click="excluir(c)">
                   Excluir
                 </button>
               </td>
@@ -157,6 +157,7 @@
 <script>
 import api from '@/services/api'
 import canteirosService from '@/services/canteiros.service'
+import { ehAdmin } from '@/utils/permissoes'
 
 export default {
   name: 'CanteirosAdminView',
@@ -173,6 +174,10 @@ export default {
     }
   },
   computed: {
+    // Canteirista só consulta os próprios canteiros
+    podeGerenciar() {
+      return ehAdmin(this.$store.getters['auth/cargoSlug'])
+    },
     canteirosFiltrados() {
       const termo = this.q.toLowerCase().trim()
 

@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\FinanceiroDaAssociacaoModel;
 use App\Repositories\FinanceiroDaAssociacaoRepository;
 use Respect\Validation\Validator as v;
@@ -47,7 +48,7 @@ class FinanceiroDaAssociacaoService
                 ]);
                 
             default:
-                throw new Exception("Permissão insuficiente | findAllWhere");
+                throw new AcessoNegadoException("Permissão insuficiente | findAllWhere");
         }
     }
 
@@ -68,12 +69,12 @@ class FinanceiroDaAssociacaoService
             case 'canteirista':
             case 'dependente':
                 if ($financeiroDaAssociacao->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar este lançamento");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar este lançamento");
                 }
                 return $financeiroDaAssociacao;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByUuid");
         }
     }
 
@@ -96,13 +97,13 @@ class FinanceiroDaAssociacaoService
             case 'canteirista':
             case 'dependente':
                 if ($associacaoUuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar lançamentos desta associação");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar lançamentos desta associação");
                 }
                 $financeirosDaAssociacao = $this->financeiroDaAssociacaoRepository->findByAssociacaoUuid($associacaoUuid);
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByAssociacaoUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByAssociacaoUuid");
         }
         
         if ($financeirosDaAssociacao->isEmpty()) {
@@ -122,12 +123,12 @@ class FinanceiroDaAssociacaoService
             case 'admin_associacao_geral':
                 // Só pode criar para sua própria associação
                 if (!empty($data['associacao_uuid']) && $data['associacao_uuid'] !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você só pode criar lançamentos para sua própria associação");
+                    throw new AcessoNegadoException("Você só pode criar lançamentos para sua própria associação");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1 | create");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1 | create");
         }
         
         v::key('valor_em_centavos', v::intType()->min(0))
@@ -175,12 +176,12 @@ class FinanceiroDaAssociacaoService
             case 'admin_associacao_geral':
                 // Só pode editar lançamentos da sua associação
                 if ($financeiroDaAssociacao->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para editar este lançamento");
+                    throw new AcessoNegadoException("Você não tem permissão para editar este lançamento");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1 | update");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1 | update");
         }
 
         v::key('valor_em_centavos', v::intType()->min(0), false)
@@ -226,12 +227,12 @@ class FinanceiroDaAssociacaoService
             case 'admin_associacao_geral':
                 // Só pode deletar lançamentos da sua associação
                 if ($financeiroDaAssociacao->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para deletar este lançamento");
+                    throw new AcessoNegadoException("Você não tem permissão para deletar este lançamento");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1 | delete");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1 | delete");
         }
 
         $data = [

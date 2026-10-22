@@ -16,51 +16,15 @@
       
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <router-link to="/" class="nav-link">Home</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/associacoes" class="nav-link">Associações</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/hortas" class="nav-link">Hortas</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/canteiros" class="nav-link">Canteiros</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/canteiristas" class="nav-link">Canteiristas</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/usuarios" class="nav-link">Usuários</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/pagamentos" class="nav-link">Pagamentos</router-link>
-          </li>
-          <li v-if="isAdminPlataforma" class="nav-item">
-            <router-link to="/planos" class="nav-link">Planos</router-link>
-          </li>
-          <li v-if="isAdmin" class="nav-item">
-            <router-link to="/mensalidades" class="nav-link">Mensalidades</router-link>
-          </li>
-          <li v-if="isAdmin" class="nav-item">
-            <router-link to="/mensalidades-associacao" class="nav-link">Mensalidades da associação</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/dependentes" class="nav-link">Dependentes</router-link>
-          </li>
-          <li v-if="podeVerInventario" class="nav-item">
-            <router-link to="/inventario" class="nav-link">Inventário</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/notificacoes" class="nav-link">Notificações</router-link>
+          <li v-for="item in itensDoMenu" :key="item.to" class="nav-item">
+            <router-link :to="item.to" class="nav-link">{{ item.label }}</router-link>
           </li>
         </ul>
         
         <div v-if="isAuthenticated" class="d-flex align-items-center">
-          <span class="text-white me-3">
+          <router-link to="/perfil" class="text-white me-3 text-decoration-none" title="Meu perfil">
             Olá, {{ currentUser?.nome || 'Usuário' }}
-          </span>
+          </router-link>
           <button @click="handleLogout" class="btn btn-outline-light btn-sm">
             Sair
           </button>
@@ -74,6 +38,25 @@
 import { computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { podeAcessar } from '@/utils/permissoes'
+
+// Itens do menu. Cada perfil vê só as páginas que o router libera para ele (meta.roles).
+const MENU = [
+  { to: '/', label: 'Início' },
+  { to: '/associacoes', label: 'Associações' },
+  { to: '/hortas', label: 'Hortas' },
+  { to: '/canteiros', label: 'Canteiros', labelCanteirista: 'Meus canteiros' },
+  { to: '/canteiristas', label: 'Canteiristas' },
+  { to: '/usuarios', label: 'Usuários' },
+  { to: '/pagamentos', label: 'Pagamentos', labelCanteirista: 'Meus pagamentos' },
+  { to: '/planos', label: 'Planos' },
+  { to: '/mensalidades', label: 'Mensalidades' },
+  { to: '/mensalidades-associacao', label: 'Mensalidades da associação' },
+  { to: '/dependentes', label: 'Dependentes' },
+  { to: '/inventario', label: 'Inventário' },
+  { to: '/notificacoes', label: 'Notificações', labelCanteirista: 'Avisos' },
+  { to: '/perfil', label: 'Perfil' }
+]
 
 export default {
   name: 'Navbar',
@@ -84,10 +67,12 @@ export default {
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
     const cargoSlug = computed(() => store.getters['auth/cargoSlug'])
-    const isAdminPlataforma = computed(() => cargoSlug.value === 'admin_plataforma')
-    const isAdmin = computed(() => ['admin_plataforma', 'admin_associacao_geral'].includes(cargoSlug.value))
-    // O inventário também é gerenciado pelo admin da horta (só a horta dele).
-    const podeVerInventario = computed(() => isAdmin.value || cargoSlug.value === 'admin_horta_geral')
+    const itensDoMenu = computed(() => {
+      const canteirista = cargoSlug.value === 'canteirista'
+      return MENU
+        .filter(item => podeAcessar(router.resolve(item.to), cargoSlug.value))
+        .map(item => ({ to: item.to, label: (canteirista && item.labelCanteirista) || item.label }))
+    })
 
     const handleLogout = () => {
       store.dispatch('auth/logout')
@@ -97,9 +82,7 @@ export default {
     return {
       isAuthenticated,
       currentUser,
-      isAdminPlataforma,
-      isAdmin,
-      podeVerInventario,
+      itensDoMenu,
       handleLogout
     }
   }

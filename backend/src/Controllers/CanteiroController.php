@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Exceptions\AcessoNegadoException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use App\Services\CanteiroService;
@@ -101,6 +102,8 @@ class CanteiroController
 
             $response->getBody()->write(json_encode($canteiroFormatado));
             return $response->withStatus(200);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 "error" => $e->getMessage()
@@ -143,6 +146,8 @@ class CanteiroController
 
             $response->getBody()->write(json_encode($canteiroFormatado));
             return $response->withStatus(201);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 "error" => $e->getMessage()
@@ -178,6 +183,8 @@ class CanteiroController
 
             $response->getBody()->write(json_encode($canteiroFormatado));
             return $response->withStatus(200);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 "error" => $e->getMessage()
@@ -201,6 +208,8 @@ class CanteiroController
                 "message" => "Registro UUID: " . $args['uuid'] . " excluído"
             ]));
             return $response->withStatus(200);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 "error" => $e->getMessage()

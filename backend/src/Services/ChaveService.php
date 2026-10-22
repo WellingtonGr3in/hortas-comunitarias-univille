@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\ChaveModel;
 use App\Repositories\ChaveRepository;
 use Respect\Validation\Validator as v;
@@ -37,7 +38,7 @@ class ChaveService
                 return $this->chaveRepository->findAllWhere(['excluido' => 0])
                     ->filter(function($chave) use ($hortasUuids) {
                         return in_array($chave->horta_uuid, $hortasUuids);
-                    });
+                    })->values();
                 
             case 'admin_horta_geral':
                 // Busca apenas chaves da sua horta
@@ -47,7 +48,7 @@ class ChaveService
                 ]);
                 
             default:
-                throw new Exception("Permissão insuficiente | findAllWhere");
+                throw new AcessoNegadoException("Permissão insuficiente | findAllWhere");
         }
     }
 
@@ -68,18 +69,18 @@ class ChaveService
                 // Verifica se a horta da chave pertence à sua associação
                 $horta = $this->hortaService->findByUuid($chave->horta_uuid, $payloadUsuarioLogado);
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta chave");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta chave");
                 }
                 return $chave;
                 
             case 'admin_horta_geral':
                 if ($chave->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta chave");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta chave");
                 }
                 return $chave;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByUuid");
         }
     }
 
@@ -96,20 +97,20 @@ class ChaveService
                 
             case 'admin_associacao_geral':
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar chaves desta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar chaves desta horta");
                 }
                 $chaves = $this->chaveRepository->findByHortaUuid($hortaUuid);
                 break;
                 
             case 'admin_horta_geral':
                 if ($hortaUuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar chaves desta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar chaves desta horta");
                 }
                 $chaves = $this->chaveRepository->findByHortaUuid($hortaUuid);
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByHortaUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByHortaUuid");
         }
         
         if ($chaves->isEmpty()) {
@@ -138,19 +139,19 @@ class ChaveService
             case 'admin_associacao_geral':
                 // Só pode criar chaves para hortas da sua associação
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você só pode criar chaves para hortas da sua associação");
+                    throw new AcessoNegadoException("Você só pode criar chaves para hortas da sua associação");
                 }
                 break;
                 
             case 'admin_horta_geral':
                 // Só pode criar chaves para sua própria horta
                 if ($data['horta_uuid'] !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você só pode criar chaves para sua própria horta");
+                    throw new AcessoNegadoException("Você só pode criar chaves para sua própria horta");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1,2 | create");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1,2 | create");
         }
 
         $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
@@ -181,19 +182,19 @@ class ChaveService
             case 'admin_associacao_geral':
                 // Só pode editar chaves de hortas da sua associação
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para editar esta chave");
+                    throw new AcessoNegadoException("Você não tem permissão para editar esta chave");
                 }
                 break;
                 
             case 'admin_horta_geral':
                 // Só pode editar chaves da sua horta
                 if ($chave->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para editar esta chave");
+                    throw new AcessoNegadoException("Você não tem permissão para editar esta chave");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1,2 | update");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1,2 | update");
         }
 
         v::key('codigo', v::stringType()->notEmpty(), false)
@@ -231,19 +232,19 @@ class ChaveService
             case 'admin_associacao_geral':
                 // Só pode deletar chaves de hortas da sua associação
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para deletar esta chave");
+                    throw new AcessoNegadoException("Você não tem permissão para deletar esta chave");
                 }
                 break;
                 
             case 'admin_horta_geral':
                 // Só pode deletar chaves da sua horta
                 if ($chave->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para deletar esta chave");
+                    throw new AcessoNegadoException("Você não tem permissão para deletar esta chave");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1,2 | delete");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1,2 | delete");
         }
 
         $data = [

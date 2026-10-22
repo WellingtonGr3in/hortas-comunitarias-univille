@@ -31,13 +31,17 @@ Os três conjuntos de credenciais que apareciam na documentação antiga foram c
 
 | Usuário | Senha | Perfil | Criado por |
 | --- | --- | --- | --- |
+| `plataforma@gmail.com` | `123456` | Administrador da plataforma | `14_SQL_DEV_usuarios_de_teste.sql` |
+| `associacao@gmail.com` | `123456` | Administrador da "Associação Demonstração" | `14_SQL_DEV_usuarios_de_teste.sql` |
+| `horta@gmail.com` | `123456` | Administrador da "Horta Demonstração" | `14_SQL_DEV_usuarios_de_teste.sql` |
+| `canteirista@gmail.com` | `123456` | Canteirista da "Horta Demonstração" | `14_SQL_DEV_usuarios_de_teste.sql` |
 | `admin@email.com` | `admin` | Administrador da plataforma | `03_SQL_criar_admin.sql` |
 | `hortas_comunitarias@univille.br` | `senha12345` | Administrador da plataforma | `01_SQL_seed_dados_iniciais.sql` |
 | `admin_assoc_1@example.com` | `senha12345` | Administrador de associação | `02_SQL_seed_dados_teste.sql` |
 | `admin_horta_1@example.com` | `senha12345` | Administrador de horta | `02_SQL_seed_dados_teste.sql` |
 | `canteirista_1@example.com` | `senha12345` | Canteirista | `02_SQL_seed_dados_teste.sql` |
 
-Os scripts rodam automaticamente pelo `backend/run-migrations.php`, que o `scripts/start-local.ps1` chama. Existem também versões `_2` dos usuários de teste (por exemplo `canteirista_2@example.com`), com a mesma senha.
+Os scripts rodam automaticamente pelo `backend/run-migrations.php`, que o `scripts/start-local.ps1` chama. Os arquivos com `_DEV_` no nome (como o `14`) só rodam com `APP_ENV=development`, para as senhas fáceis nunca chegarem à produção. Existem também versões `_2` dos usuários de teste (por exemplo `canteirista_2@example.com`), com a mesma senha.
 
 Credenciais que **não** valem mais:
 

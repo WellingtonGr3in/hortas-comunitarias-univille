@@ -1,6 +1,6 @@
 # Manual do Usuário — Hortas Comunitárias
 
-Atualizado em 15/10/2026
+Atualizado em 22/10/2026
 
 Este manual mostra, em passo a passo, as tarefas mais comuns de cada perfil do sistema Hortas Comunitárias. Ele foi escrito para quem cuida de uma horta no dia a dia, não para quem trabalha com tecnologia.
 
@@ -12,8 +12,16 @@ O sistema tem duas formas de acesso: o **site**, usado pelos administradores, e 
 
 1. Abra o endereço do sistema no navegador.
 2. Digite seu e-mail e sua senha.
-3. Clique em **Entrar**. Você vai para a tela inicial, com o menu no topo: Associações, Hortas, Canteiros, Canteiristas, Pagamentos, Mensalidades, Dependentes e Notificações.
+3. Clique em **Entrar**. Você vai para a tela inicial, com o menu no topo. O menu muda conforme o seu perfil:
+   - **Administrador da plataforma:** Início, Associações, Hortas, Canteiros, Canteiristas, Usuários, Pagamentos, Planos, Mensalidades, Mensalidades da associação, Dependentes, Inventário, Notificações e Perfil.
+   - **Administrador de associação:** os mesmos itens, menos Planos.
+   - **Administrador de horta:** Início, Associações, Hortas, Canteiros, Canteiristas, Usuários, Pagamentos, Dependentes, Inventário, Notificações e Perfil.
+   - **Canteirista:** Início, Meus canteiros, Meus pagamentos, Dependentes, Avisos e Perfil.
 4. Para sair, use o botão de sair no canto superior direito.
+
+Cada perfil só enxerga os dados da sua parte: o administrador de associação vê a própria associação, o administrador de horta vê a própria horta e o canteirista vê só os próprios dados. Se você tentar abrir uma página que não é do seu perfil, o sistema volta para a tela inicial e mostra um aviso.
+
+Em **Perfil** você confere seus dados e corrige seu e-mail. O canteirista também pode corrigir o telefone.
 
 Em **Notificações**, os avisos que você ainda não leu aparecem com um ponto azul. Para limpar todos de uma vez, clique em **Marcar todas como lidas**.
 
@@ -149,7 +157,7 @@ Você cuida do dia a dia de uma horta: os canteiros, quem planta em cada um, os 
 
 ## Canteirista
 
-Você planta em um ou mais canteiros. No sistema você só consulta suas informações; quem cadastra e muda os dados é o administrador da sua horta.
+Você planta em um ou mais canteiros. No sistema você consulta suas informações e só pode mudar o seu e-mail e o seu telefone; o resto quem cadastra e muda é o administrador da sua horta.
 
 **1. Entrar no aplicativo**
 
@@ -193,7 +201,7 @@ Por enquanto os dependentes aparecem só no site. Entre no site com o mesmo e-ma
 | Canteirista | Pessoa que planta em um canteiro da horta. |
 | Canteiro | Pedaço de terra da horta, com número e tamanho em metros quadrados, entregue a um canteirista. Pode estar disponível, ocupado ou em preparo. |
 | Chave | Cópia da chave do portão ou do depósito da horta. O sistema registra qual chave existe e se ela está disponível ou emprestada. |
-| Dependente | Pessoa ligada a um canteirista, como um filho ou cônjuge, que pode ajudar no canteiro dele. |
+| Dependente | Pessoa ligada a um canteirista, como um filho ou cônjuge, que pode ajudar no canteiro dele. O dependente não entra no sistema: quem cadastra e consulta é o administrador da horta e o próprio canteirista. |
 | Fila de espera | Lista, em ordem de chegada, de pessoas que querem um canteiro numa horta onde não há canteiro livre. Quando um canteiro vaga, a próxima da fila é chamada. |
 | Horta | Terreno onde ficam os canteiros. Toda horta pertence a uma associação e tem um responsável. |
 | Mensalidade | Valor pago todo mês. O associado paga a mensalidade da associação, e a mensalidade da plataforma é o valor cobrado pelo uso do sistema. Cada uma tem data de vencimento e aparece como "Paga" quando é quitada. |

@@ -21,11 +21,6 @@
           <h3 class="text-center mb-3">Bem-vindo de volta!👋🏻</h3>
           <p class="text-center text-muted mb-4">Entre na sua conta para continuar</p>
 
-          <div class="role-toggle d-flex justify-content-center mb-3">
-            <button :class="['btn', selectedRole==='canteirista' ? 'btn-light active' : 'btn-outline-secondary']" @click="selectedRole='canteirista'">Canteirista</button>
-            <button :class="['btn', selectedRole==='admin' ? 'btn-light active' : 'btn-outline-secondary']" @click="selectedRole='admin'">Administrador</button>
-          </div>
-
           <div v-if="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
 
           <form @submit.prevent="handleLogin">
@@ -35,11 +30,11 @@
 
             <button
               type="submit"
-              :class="['w-100 mt-3 login-cta', selectedRole === 'admin' ? 'cta-admin' : 'cta-canteirista']"
+              class="w-100 mt-3 login-cta cta-canteirista"
               :disabled="loading"
             >
               <span v-if="loading">Entrando...</span>
-              <span v-else>{{ selectedRole === 'admin' ? 'Entrar como Administrador' : 'Entrar como Canteirista' }}</span>
+              <span v-else>Entrar</span>
             </button>
           </form>
 
@@ -79,7 +74,6 @@ export default {
     
   const loading = ref(false)
   const errorMessage = ref('')
-  const selectedRole = ref('canteirista')
     
     const validateForm = () => {
       let isValid = true
@@ -133,7 +127,6 @@ export default {
       errors,
       loading,
       errorMessage,
-      selectedRole,
       handleLogin
     }
   }
@@ -150,11 +143,6 @@ export default {
 .login-card .card-body { padding: 32px; }
 .login-card .form-control { height: 56px; padding: 10px 16px; font-size: 16px; border-radius: 10px; }
 .login-card .form-label { font-weight: 600; }
-.role-toggle { background:#f1f3f5; padding:4px; border-radius:999px; display:inline-flex; gap:4px; }
-.role-toggle .btn { border-radius: 999px; min-width:160px; border: none; }
-.role-toggle .btn.btn-outline-secondary { background: transparent; }
-.role-toggle .btn.active { background: #ffffff; box-shadow: 0 2px 6px rgba(16,24,40,0.04); }
-.role-toggle .btn:focus { box-shadow: none; }
 
 /* slightly larger heading */
 .login-card h3 { font-size: 20px; font-weight: 700; }
@@ -180,9 +168,6 @@ export default {
 .cta-canteirista:hover { background-color: #0e8f4e; }
 .cta-canteirista:active { background-color: #0c7e42; }
 
-.cta-admin { background-color: #2563eb; }
-.cta-admin:hover { background-color: #1f54d1; }
-.cta-admin:active { background-color: #1a44b8; }
 
 .login-cta:disabled {
   opacity: 0.6;

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { avisarAcessoNegado } from '@/utils/permissoes'
 
 const api = axios.create({
   baseURL: process.env.VUE_APP_API_URL || '/api/v1',
@@ -23,6 +24,10 @@ api.interceptors.response.use(
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
+    }
+    if (error.response?.status === 403) {
+      const data = error.response.data || {}
+      avisarAcessoNegado(data.error && data.error !== 'Acesso negado' ? data.error : data.message)
     }
     return Promise.reject(error)
   }

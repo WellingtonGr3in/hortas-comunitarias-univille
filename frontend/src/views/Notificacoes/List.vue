@@ -164,6 +164,7 @@
 </template>
 
 <script>
+import { ehAdmin } from '@/utils/permissoes'
 import { mapGetters, mapState } from 'vuex'
 import NotificacoesSummary from '@/components/NotificacoesSummary.vue'
 import NotificacaoItem from '@/components/NotificacaoItem.vue'
@@ -183,32 +184,8 @@ export default {
     ...mapState('auth', ['user']),
     
     isAdmin() {
-      // Verifica se é administrador
-      console.log('🔍 Verificando isAdmin:', {
-        user: this.user,
-        cargo: this.user?.cargo,
-        cargo_uuid: this.user?.cargo_uuid
-      })
-      
-      if (!this.user) return false
-
-      if (this.user.cargo_slug) {
-        return this.user.cargo_slug.startsWith('admin')
-      }
-      
-      // Verifica pelo cargo (nome ou slug)
-      if (this.user.cargo) {
-        const cargoLower = this.user.cargo.toLowerCase()
-        if (cargoLower.includes('admin') || 
-            cargoLower.includes('administração') ||
-            cargoLower.includes('plataforma')) {
-          return true
-        }
-      }
-      
-      // Fallback: se não tem cargo definido mas tem cargo_uuid, assume como admin temporariamente
-      // (Isso permitirá que o admin veja a interface enquanto ajustamos o backend)
-      return true
+      // Gestão de avisos é só para administradores; o canteirista vê o feed
+      return ehAdmin(this.$store.getters['auth/cargoSlug'])
     },
     
     notificacoes() { 
