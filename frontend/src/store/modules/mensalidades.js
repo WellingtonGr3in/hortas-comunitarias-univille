@@ -1,6 +1,7 @@
 import mensalidadesService from '@/services/mensalidades.service'
+import pagamentosService from '@/services/pagamentos.service'
 
-// Códigos de status da tabela mensalidades_da_plataforma (docs/db/README.md)
+// Códigos de status das mensalidades da plataforma e da associação (docs/db/README.md)
 export const STATUS = {
   AGUARDANDO: 0,
   PAGO: 1,
@@ -26,24 +27,27 @@ export const situacao = m => {
   return m.data_vencimento && m.data_vencimento < hojeISO() ? 'atrasada' : 'pendente'
 }
 
+// Qual tabela de mensalidades o cargo gerencia: o admin da plataforma cobra as associações
+// (mensalidades da plataforma); o admin da associação cobra os canteiristas (mensalidades da associação)
+export const tipoDoCargo = cargoSlug => (cargoSlug === 'admin_plataforma' ? 'plataforma' : 'associacao')
+
 const state = {
   mensalidades: [],
+  tipo: null,
   loading: false,
   error: null
 }
 
 const getters = {
   allMensalidades: state => state.mensalidades,
+  tipo: state => state.tipo,
   isLoading: state => state.loading
 }
 
 const mutations = {
-  SET_MENSALIDADES(state, list) {
+  SET_MENSALIDADES(state, { list, tipo }) {
     state.mensalidades = list
-  },
-  UPDATE_MENSALIDADE(state, updated) {
-    const i = state.mensalidades.findIndex(x => x.uuid === updated.uuid)
-    if (i !== -1) state.mensalidades.splice(i, 1, updated)
+    state.tipo = tipo
   },
   SET_LOADING(state, loading) {
     state.loading = loading
@@ -54,11 +58,13 @@ const mutations = {
 }
 
 const actions = {
-  async fetchMensalidades({ commit }, params = {}) {
+  async fetchMensalidades({ commit, rootState }) {
+    const tipo = tipoDoCargo(rootState.auth.user?.cargo_slug)
     commit('SET_LOADING', true)
     try {
-      const res = await mensalidadesService.getAll(params)
-      commit('SET_MENSALIDADES', res.data?.data || res.data || [])
+      const res = await mensalidadesService.getAll(tipo)
+      const list = res.data?.data || res.data || []
+      commit('SET_MENSALIDADES', { list, tipo })
       commit('SET_ERROR', null)
     } catch (err) {
       commit('SET_ERROR', err.response?.data?.error || err.message)
@@ -66,18 +72,23 @@ const actions = {
       commit('SET_LOADING', false)
     }
   },
-  async marcarComoPaga({ commit }, uuid) {
+  // Lança o pagamento e quita a mensalidade no backend (mesma transação), depois recarrega a lista
+  async registrarPagamento({ dispatch, state }, { mensalidade, valor, forma_pagamento, data_pagamento, observacao }) {
     try {
-      const res = await mensalidadesService.update(uuid, {
-        data_pagamento: hojeISO(),
-        status: STATUS.PAGO
+      const res = await pagamentosService.registrarDeMensalidade({
+        mensalidade_tipo: state.tipo,
+        mensalidade_uuid: mensalidade.uuid,
+        valor,
+        forma_pagamento,
+        data_pagamento,
+        observacao: observacao || null
       })
-      commit('UPDATE_MENSALIDADE', res.data)
-      return { success: true, data: res.data }
+      await dispatch('fetchMensalidades')
+      return { success: true, data: res.data?.data }
     } catch (err) {
       return {
         success: false,
-        message: err.response?.data?.error || 'Erro ao marcar mensalidade como paga'
+        message: err.response?.data?.error || 'Erro ao registrar pagamento'
       }
     }
   }

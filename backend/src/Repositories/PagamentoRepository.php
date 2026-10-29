@@ -9,15 +9,43 @@ class PagamentoRepository
 {
     public function findAll()
     {
-        return PagamentoModel::with('Canteirista')
+        return $this->queryComRelacoes()
             ->where('excluido', 0)
             ->orderBy('data_pagamento', 'desc')
             ->get();
     }
 
+    // Pagamentos de mensalidades da associação informada (escopo do admin_associacao_geral)
+    public function findAllDaAssociacao(string $associacaoUuid)
+    {
+        return $this->queryComRelacoes()
+            ->where('excluido', 0)
+            ->where('mensalidade_tipo', 'associacao')
+            ->whereHas('mensalidadeDaAssociacao', fn ($q) => $q->where('associacao_uuid', $associacaoUuid))
+            ->orderBy('data_pagamento', 'desc')
+            ->get();
+    }
+
+    public function findAtivoPorMensalidade(string $tipo, string $mensalidadeUuid): ?PagamentoModel
+    {
+        return PagamentoModel::where('mensalidade_tipo', $tipo)
+            ->where('mensalidade_uuid', $mensalidadeUuid)
+            ->where('excluido', 0)
+            ->first();
+    }
+
+    private function queryComRelacoes()
+    {
+        return PagamentoModel::with([
+            'Canteirista',
+            'mensalidadeDaAssociacao.usuario',
+            'mensalidadeDaPlataforma.usuario',
+        ]);
+    }
+
     public function findByUuid(string $uuid)
     {
-        return PagamentoModel::with('Canteirista')
+        return $this->queryComRelacoes()
             ->where('uuid', $uuid)
             ->where('excluido', 0)
             ->first();

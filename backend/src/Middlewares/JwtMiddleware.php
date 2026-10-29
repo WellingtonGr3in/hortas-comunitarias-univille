@@ -51,6 +51,7 @@ class JwtMiddleware
             $request = $request
                 ->withAttribute('usuario_uuid', $decoded->usuario_uuid ?? null)
                 ->withAttribute('cargo_uuid', $decoded->cargo_uuid ?? null)
+                ->withAttribute('cargo_slug', $decoded->cargo_slug ?? null)
                 ->withAttribute('associacao_uuid', $decoded->associacao_uuid ?? null)
                 ->withAttribute('horta_uuid', $decoded->horta_uuid ?? null);
 

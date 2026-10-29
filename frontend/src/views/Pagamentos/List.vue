@@ -31,8 +31,9 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Canteirista</th>
+            <th>Pagador</th>
             <th>Telefone</th>
+            <th>Mensalidade</th>
             <th>Valor</th>
             <th>Forma</th>
             <th>Data</th>
@@ -42,8 +43,17 @@
         </thead>
         <tbody>
           <tr v-for="pagamento in pagamentos" :key="pagamento.id">
-            <td>{{ pagamento.carteirista_nome || '—' }}</td>
+            <td>{{ pagamento.mensalidade_pagador || pagamento.carteirista_nome || '—' }}</td>
             <td>{{ pagamento.carteirista_telefone || '—' }}</td>
+            <td>
+              <template v-if="pagamento.mensalidade_uuid">
+                Venc. {{ formatDate(pagamento.mensalidade_vencimento) }}
+                <div class="small text-muted">
+                  {{ pagamento.mensalidade_tipo === 'plataforma' ? 'Mensalidade da plataforma' : 'Mensalidade da associação' }}
+                </div>
+              </template>
+              <span v-else class="text-muted">Avulso</span>
+            </td>
             <td class="valor">R$ {{ parseFloat(pagamento.valor).toFixed(2) }}</td>
             <td>
               <span class="badge" :class="getBadgeClass(pagamento.forma_pagamento)">
@@ -53,11 +63,12 @@
             <td>{{ formatDate(pagamento.data_pagamento) }}</td>
             <td>{{ pagamento.observacao || '—' }}</td>
             <td class="actions">
-              <button @click="handleEdit(pagamento.id)" class="btn-icon" title="Editar">
+              <!-- Pagamento de mensalidade não se edita: estorna e lança de novo -->
+              <button v-if="!pagamento.mensalidade_uuid" @click="handleEdit(pagamento.id)" class="btn-icon" title="Editar">
                 ✏️
               </button>
-              <button @click="handleDelete(pagamento.id)" class="btn-icon" title="Excluir">
-                🗑️
+              <button @click="handleDelete(pagamento)" class="btn-icon" title="Estornar">
+                ↩️
               </button>
             </td>
           </tr>
@@ -103,14 +114,18 @@ export default {
       router.push(`/pagamentos/${id}/editar`)
     }
 
-    const handleDelete = async (id) => {
-      if (!confirm('Deseja realmente excluir este pagamento?')) return
+    // Estorno = exclusão lógica; se o pagamento quitava uma mensalidade, ela volta para em aberto
+    const handleDelete = async (pagamento) => {
+      const aviso = pagamento.mensalidade_uuid
+        ? 'Estornar este pagamento? A mensalidade voltará para "em aberto".'
+        : 'Estornar este pagamento?'
+      if (!confirm(aviso)) return
 
       try {
-        await store.dispatch('pagamentos/deletePagamento', id)
-        alert('Pagamento excluído com sucesso!')
+        await store.dispatch('pagamentos/deletePagamento', pagamento.id)
+        alert('Pagamento estornado.')
       } catch (error) {
-        alert('Erro ao excluir pagamento: ' + (error.message || 'Erro desconhecido'))
+        alert('Erro ao estornar pagamento: ' + (error.message || 'Erro desconhecido'))
       }
     }
 
@@ -126,10 +141,11 @@ export default {
       return forma === 'pix' ? 'badge-pix' : 'badge-dinheiro'
     }
 
+    // Datas chegam como YYYY-MM-DD; new Date() leria como UTC e mostraria o dia anterior no Brasil
     const formatDate = (date) => {
       if (!date) return '—'
-      const d = new Date(date)
-      return d.toLocaleDateString('pt-BR')
+      const [ano, mes, dia] = String(date).substring(0, 10).split('-')
+      return `${dia}/${mes}/${ano}`
     }
 
     return {
