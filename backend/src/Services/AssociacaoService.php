@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ConflitoException;
 use App\Models\AssociacaoModel;
 use App\Repositories\AssociacaoRepository;
 use Respect\Validation\Validator as v;
@@ -68,6 +69,11 @@ class AssociacaoService
             throw new Exception("Nome da associação é obrigatório");
         }
         
+        // CNPJ é UNIQUE no banco: sem esta checagem, o duplicado vira erro de SQL (500)
+        if (!empty($data['cnpj']) && $this->associacaoRepository->findByCnpj($data['cnpj'])) {
+            throw new ConflitoException('Já existe uma associação com este CNPJ');
+        }
+
         // Gerar CNPJ temporário se não fornecido (para não violar constraint UNIQUE)
         if (!isset($data['cnpj']) || empty($data['cnpj'])) {
             // $data['cnpj'] = 'TEMP-' . time() . '-' . rand(1000, 9999); // corrigido, essa geração quebrava o tamanho definido

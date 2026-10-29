@@ -21,7 +21,7 @@ class MensalidadeDaPlataformaModel extends Model
         'associacao_uuid',
         'valor_em_centavos',
         'mes_referencia',
-        'plano',
+        'plano_uuid',
         'data_vencimento',
         'data_pagamento',
         'status',

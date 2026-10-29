@@ -118,7 +118,9 @@ const actions = {
       return {
         success: false,
         message: error.message || 'Erro ao realizar cadastro',
-        status: error.status
+        status: error.status,
+        // Em 422 de validação, details traz o erro de cada campo ({ cpf: '...', email: '...' })
+        details: error.data?.details || null
       }
     }
   },

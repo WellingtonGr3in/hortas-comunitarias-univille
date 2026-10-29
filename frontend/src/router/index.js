@@ -15,6 +15,12 @@ component: () => import('@/views/Login.vue'),
 meta: { guest: true }
 },
 {
+path: '/cadastro',
+name: 'Cadastro',
+component: () => import('@/views/Cadastro.vue'),
+meta: { guest: true }
+},
+{
 path: '/associacoes',
 name: 'AssociacoesList',
 component: () => import('@/views/Associacoes/List.vue'),
