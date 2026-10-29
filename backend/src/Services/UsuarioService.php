@@ -11,7 +11,9 @@ use App\Services\CargoService;
 use App\Services\ChaveService;
 use App\Services\EnderecoService;
 use App\Services\HortaService;
-use Exception;
+use App\Exceptions\AcessoNegadoException;
+use App\Exceptions\ConflitoException;
+use App\Exceptions\RecursoNaoEncontradoException;
 use Illuminate\Database\Eloquent\Collection;
 
 class UsuarioService
@@ -58,7 +60,7 @@ class UsuarioService
                 return $this->usuarioRepository->findAllWhere(['excluido' => 0, 'horta_uuid' => $payloadUsuarioLogado['horta_uuid']]);
                 break;
             default:
-                throw new Exception('Nenhuma informaçã de usuários encontrada');
+                throw new AcessoNegadoException('Nenhuma informaçã de usuários encontrada');
         }
         */
     }
@@ -68,7 +70,7 @@ class UsuarioService
 
         $usuario = $this->usuarioRepository->findByUuid($uuid);
         if (!$usuario || $usuario->excluido) {
-            throw new Exception('Usuário não encontrado');
+            throw new RecursoNaoEncontradoException('Usuário não encontrado');
         }
 
         $cargo = $this->cargoService->findByUuidInternal($payloadUsuarioLogado['cargo_uuid']);
@@ -80,26 +82,26 @@ class UsuarioService
             case 'admin_associacao_geral':
                 $usuario = $this->usuarioRepository->findByUuid($uuid);
                 if (!$usuario || $usuario->excluido || $usuario->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception('Usuário não encontrado');
+                    throw new RecursoNaoEncontradoException('Usuário não encontrado');
                 }
                 return $usuario;
                 break;
             case 'admin_horta_geral':
                 $usuario = $this->usuarioRepository->findByUuid($uuid);
                 if (!$usuario || $usuario->excluido || $usuario->horta_uuid != $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception('Usuário não encontrado');
+                    throw new RecursoNaoEncontradoException('Usuário não encontrado');
                 }
                 return $usuario;
                 break;
             default:
-                throw new Exception('Nenhuma informação de usuário encontrada');
+                throw new AcessoNegadoException('Nenhuma informação de usuário encontrada');
         }
     }
     public function findByEmail(string $email): ?UsuarioModel
     {
         $usuario = $this->usuarioRepository->findByEmail($email);
         if (!$usuario || $usuario->excluido) {
-            throw new Exception('Usuário não encontrado');
+            throw new RecursoNaoEncontradoException('Usuário não encontrado');
         }
         return $usuario;
     }
@@ -118,13 +120,13 @@ class UsuarioService
             $email = $data['email'];
             $usuarioComEsseEmail = $this->usuarioRepository->findByEmail($email);
             if ($usuarioComEsseEmail) {
-                throw new Exception('Usuário com o email:' . $email . ' já existe');
+                throw new ConflitoException('Já existe um usuário com este e-mail');
             }
 
             $cpf = $data['cpf'];
             $usuarioComEsseCPF = $this->usuarioRepository->findByCpf($cpf);
             if ($usuarioComEsseCPF) {
-                throw new Exception('Usuário com o cpf:' . $cpf . ' já existe');
+                throw new ConflitoException('Já existe um usuário com este CPF');
             }
 
             $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
@@ -185,13 +187,13 @@ class UsuarioService
                     $email = $data['email'];
                     $usuarioComEsseEmail = $this->usuarioRepository->findByEmail($email);
                     if ($usuarioComEsseEmail) {
-                        throw new Exception('Usuário com o email:' . $email . ' já existe');
+                        throw new ConflitoException('Já existe um usuário com este e-mail');
                     }
 
                     $cpf = $data['cpf'];
                     $usuarioComEsseCPF = $this->usuarioRepository->findByCpf($cpf);
                     if ($usuarioComEsseCPF) {
-                        throw new Exception('Usuário com o cpf:' . $cpf . ' já existe');
+                        throw new ConflitoException('Já existe um usuário com este CPF');
                     }
 
                     $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
@@ -249,13 +251,13 @@ class UsuarioService
                     $email = $data['email'];
                     $usuarioComEsseEmail = $this->usuarioRepository->findByEmail($email);
                     if ($usuarioComEsseEmail) {
-                        throw new Exception('Usuário com o email:' . $email . ' já existe');
+                        throw new ConflitoException('Já existe um usuário com este e-mail');
                     }
 
                     $cpf = $data['cpf'];
                     $usuarioComEsseCPF = $this->usuarioRepository->findByCpf($cpf);
                     if ($usuarioComEsseCPF) {
-                        throw new Exception('Usuário com o cpf:' . $cpf . ' já existe');
+                        throw new ConflitoException('Já existe um usuário com este CPF');
                     }
 
                     $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
@@ -282,7 +284,7 @@ class UsuarioService
                     if (!empty($data['horta_uuid'])) {
                         $horta = $this->hortaService->findByUuid($data['horta_uuid'], $payloadUsuarioLogado);
                         if ($horta->associacao_vinculada_uuid != $payloadUsuarioLogado['associacao_uuid']) {
-                            throw new Exception('Horta inválida para sua associação UUID');
+                            throw new AcessoNegadoException('Horta inválida para sua associação UUID');
                         }
                     }
 
@@ -294,7 +296,7 @@ class UsuarioService
                         $chave = $this->chaveService->findByUuid($data['chave_uuid'], $payloadUsuarioLogado);
                         $horta = $this->hortaService->findByUuid($chave->horta_uuid, $payloadUsuarioLogado);
                         if ($horta->associacao_vinculada_uuid != $payloadUsuarioLogado['associacao_uuid']) {
-                            throw new Exception('Chave inválida para horta que não é de sua associação UUID');
+                            throw new AcessoNegadoException('Chave inválida para horta que não é de sua associação UUID');
                         }
                     }
                     return $this->usuarioRepository->create($data);
@@ -318,13 +320,13 @@ class UsuarioService
                     $email = $data['email'];
                     $usuarioComEsseEmail = $this->usuarioRepository->findByEmail($email);
                     if ($usuarioComEsseEmail) {
-                        throw new Exception('Usuário com o email:' . $email . ' já existe');
+                        throw new ConflitoException('Já existe um usuário com este e-mail');
                     }
 
                     $cpf = $data['cpf'];
                     $usuarioComEsseCPF = $this->usuarioRepository->findByCpf($cpf);
                     if ($usuarioComEsseCPF) {
-                        throw new Exception('Usuário com o cpf:' . $cpf . ' já existe');
+                        throw new ConflitoException('Já existe um usuário com este CPF');
                     }
 
                     $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
@@ -350,7 +352,7 @@ class UsuarioService
                     // Horta deve pertencer a associacao_uuid de quem está tentando atribuir
                     if (!empty($data['horta_uuid'])) {
                         if ($data['horta_uuid'] != $payloadUsuarioLogado['horta_uuid']) {
-                            throw new Exception('Horta inválida para sua horta UUID');
+                            throw new AcessoNegadoException('Horta inválida para sua horta UUID');
                         }
                     }
 
@@ -361,13 +363,13 @@ class UsuarioService
                     if (!empty($data['chave_uuid'])) {
                         $chave = $this->chaveService->findByUuid($data['chave_uuid'], $payloadUsuarioLogado);
                         if ($chave->horta_uuid != $payloadUsuarioLogado['horta_uuid']) {
-                            throw new Exception('Chave inválida para sua horta UUID');
+                            throw new AcessoNegadoException('Chave inválida para sua horta UUID');
                         }
                     }
                     return $this->usuarioRepository->create($data);
                     break;
                 default:
-                    throw new Exception('Não será possível criar o usuário');
+                    throw new AcessoNegadoException('Não será possível criar o usuário');
             }
             v::key('nome_completo', v::stringType()->notEmpty())
                 ->key('cpf', v::cpf())
@@ -387,13 +389,13 @@ class UsuarioService
             $email = $data['email'];
             $usuarioComEsseEmail = $this->usuarioRepository->findByEmail($email);
             if ($usuarioComEsseEmail) {
-                throw new Exception('Usuário com o email:' . $email . ' já existe');
+                throw new ConflitoException('Já existe um usuário com este e-mail');
             }
 
             $cpf = $data['cpf'];
             $usuarioComEsseCPF = $this->usuarioRepository->findByCpf($cpf);
             if ($usuarioComEsseCPF) {
-                throw new Exception('Usuário com o cpf:' . $cpf . ' já existe');
+                throw new ConflitoException('Já existe um usuário com este CPF');
             }
 
             $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
@@ -439,7 +441,7 @@ class UsuarioService
     {
         $usuario = $this->usuarioRepository->findByUuid($uuid);
         if (!$usuario || $usuario->excluido) {
-            throw new Exception('Usuário não encontrado');
+            throw new RecursoNaoEncontradoException('Usuário não encontrado');
         }
 
         $cargo = $this->cargoService->findByUuidInternal($payloadUsuarioLogado['cargo_uuid']);
@@ -452,7 +454,7 @@ class UsuarioService
             case "admin_associacao_geral":
                 // Só pode alterar usuários da própria associação
                 if ($usuario->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception('Usuário não pertence à sua associação');
+                    throw new AcessoNegadoException('Usuário não pertence à sua associação');
                 }
                 // Garante que associação atribuída seja da mesma do usuário logado
                 if (!empty($data['associacao_uuid'])) {
@@ -462,14 +464,14 @@ class UsuarioService
                 if (!empty($data['horta_uuid'])) {
                     $horta = $this->hortaService->findByUuid($data['horta_uuid'], $payloadUsuarioLogado);
                     if ($horta->associacao_vinculada_uuid != $payloadUsuarioLogado['associacao_uuid']) {
-                        throw new Exception('Horta inválida para sua associação');
+                        throw new AcessoNegadoException('Horta inválida para sua associação');
                     }
                 }
                 if (!empty($data['chave_uuid'])) {
                     $chave = $this->chaveService->findByUuid($data['chave_uuid'], $payloadUsuarioLogado);
                     $horta = $this->hortaService->findByUuid($chave->horta_uuid, $payloadUsuarioLogado);
                     if ($horta->associacao_vinculada_uuid != $payloadUsuarioLogado['associacao_uuid']) {
-                        throw new Exception('Chave inválida para horta da sua associação');
+                        throw new AcessoNegadoException('Chave inválida para horta da sua associação');
                     }
                 }
                 break;
@@ -477,21 +479,21 @@ class UsuarioService
             case "admin_horta_geral":
                 // Só pode alterar usuários da própria horta
                 if ($usuario->horta_uuid != $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception('Usuário não pertence à sua horta');
+                    throw new AcessoNegadoException('Usuário não pertence à sua horta');
                 }
                 if (!empty($data['horta_uuid']) && $data['horta_uuid'] != $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception('Não pode alterar para outra horta');
+                    throw new AcessoNegadoException('Não pode alterar para outra horta');
                 }
                 if (!empty($data['chave_uuid'])) {
                     $chave = $this->chaveService->findByUuid($data['chave_uuid'], $payloadUsuarioLogado);
                     if ($chave->horta_uuid != $payloadUsuarioLogado['horta_uuid']) {
-                        throw new Exception('Chave inválida para sua horta');
+                        throw new AcessoNegadoException('Chave inválida para sua horta');
                     }
                 }
                 break;
 
             default:
-                throw new Exception('Não é possível alterar o usuário');
+                throw new AcessoNegadoException('Não é possível alterar o usuário');
         }
 
         // Continua validação comum
@@ -544,7 +546,7 @@ class UsuarioService
     {
         $usuario = $this->usuarioRepository->findByUuid($uuid);
         if (!$usuario || $usuario->excluido) {
-            throw new Exception('Usuário não encontrado');
+            throw new RecursoNaoEncontradoException('Usuário não encontrado');
         }
 
         $cargo = $this->cargoService->findByUuidInternal($payloadUsuarioLogado['cargo_uuid']);
@@ -556,18 +558,18 @@ class UsuarioService
 
             case "admin_associacao_geral":
                 if ($usuario->associacao_uuid != $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception('Usuário não pertence à sua associação');
+                    throw new AcessoNegadoException('Usuário não pertence à sua associação');
                 }
                 break;
 
             case "admin_horta_geral":
                 if ($usuario->horta_uuid != $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception('Usuário não pertence à sua horta');
+                    throw new AcessoNegadoException('Usuário não pertence à sua horta');
                 }
                 break;
 
             default:
-                throw new Exception('Não é possível deletar o usuário');
+                throw new AcessoNegadoException('Não é possível deletar o usuário');
         }
 
         $data = [

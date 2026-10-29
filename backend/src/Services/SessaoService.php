@@ -1,18 +1,24 @@
 <?php
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
+use App\Exceptions\CredenciaisInvalidasException;
+use App\Exceptions\RecursoNaoEncontradoException;
 use App\Models\CargoModel;
 use App\Services\UsuarioService;
 use App\Services\AssociacaoService;
 use App\Services\MensalidadeDaPlataformaService;
 use App\Services\PlanoService;
 use Firebase\JWT\JWT;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class SessaoService
 {
+    // Hash bcrypt (custo 12, como as senhas reais) de um valor aleatório. Usado quando o e-mail
+    // não existe, para o login levar o mesmo tempo e não revelar quais e-mails estão cadastrados.
+    private const HASH_PARA_EMAIL_INEXISTENTE = '$2y$12$3p1NHxC0HRkGcRKqI4QRQeXHx6xulZak2IRNXeHl7iEZEDanpCW2.';
+
     public function __construct(
         private UsuarioService $usuarioService,
         private AssociacaoService $associacaoService,
@@ -24,17 +30,21 @@ class SessaoService
 
     public function signIn(string $email, string $senha, array $payloadUsuarioLogado): string
     {
-        $usuario = $this->usuarioService->findByEmail($email);
-        if (!$usuario) {
-            throw new Exception("Usuário inválido");
+        try {
+            $usuario = $this->usuarioService->findByEmail($email);
+        } catch (RecursoNaoEncontradoException) {
+            $usuario = null;
         }
 
-        if (!password_verify($senha, $usuario->senha)) {
-            throw new Exception("Senha inválida");
+        // E-mail inexistente e senha errada respondem igual, com a mesma mensagem e o mesmo custo
+        $senhaConfere = password_verify($senha, $usuario->senha ?? self::HASH_PARA_EMAIL_INEXISTENTE);
+        if (!$usuario || !$senhaConfere) {
+            throw new CredenciaisInvalidasException();
         }
 
+        // Só chega aqui quem acertou e-mail e senha, então a mensagem própria não vaza nada
         if (in_array((string) $usuario->status_de_acesso, ['inativo', 'bloqueado', '0'], true)) {
-            throw new Exception('Acesso do usuário bloqueado');
+            throw new AcessoNegadoException('Acesso do usuário bloqueado');
         }
 
         $payload = [

@@ -10,6 +10,9 @@
 
         $database = require __DIR__ . '/database.php';
         $database($containerBuilder);
+
+        $logger = require __DIR__ . '/logger.php';
+        $logger($containerBuilder);
        
         $usuarioBindings = require __DIR__ . '/usuario_bindings.php';
         $usuarioBindings($containerBuilder);
