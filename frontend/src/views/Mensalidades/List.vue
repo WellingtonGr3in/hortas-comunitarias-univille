@@ -1,7 +1,10 @@
 <template>
   <div class="mensalidades-list">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="mb-0">Mensalidades da plataforma</h2>
+      <div>
+        <h2 class="mb-0">Mensalidades</h2>
+        <small v-if="tipo" class="text-muted">{{ tipo === 'plataforma' ? 'Cobradas das associações pela plataforma' : 'Cobradas dos canteiristas pela associação' }}</small>
+      </div>
       <div class="d-flex align-items-center gap-2">
         <label for="filtro-status" class="form-label mb-0">Status</label>
         <select id="filtro-status" v-model="filtroStatus" class="form-select">
@@ -10,13 +13,14 @@
           <option value="pendente">Pendentes</option>
           <option value="atrasada">Atrasadas</option>
         </select>
-        <button v-if="isAdminPlataforma" class="btn btn-success text-nowrap" @click="abrirModal">
+        <button v-if="isAdminPlataforma" class="btn btn-success text-nowrap" @click="abrirNovaMensalidade">
           Nova mensalidade
         </button>
       </div>
     </div>
 
     <div v-if="mensagemErro" class="alert alert-danger">{{ mensagemErro }}</div>
+    <div v-if="mensagemSucesso" class="alert alert-success">{{ mensagemSucesso }}</div>
 
     <div v-if="isLoading" class="text-center my-4">
       <div class="spinner-border text-success" role="status"></div>
@@ -31,7 +35,7 @@
         <thead class="table-light">
           <tr>
             <th>Usuário</th>
-            <th>Plano</th>
+            <th v-if="tipo === 'plataforma'">Plano</th>
             <th class="text-end">Valor</th>
             <th>Vencimento</th>
             <th>Status</th>
@@ -41,7 +45,7 @@
         <tbody>
           <tr v-for="m in mensalidadesFiltradas" :key="m.uuid">
             <td>{{ nomeUsuario(m.usuario_uuid) }}</td>
-            <td>{{ nomePlano(m.plano_uuid) }}</td>
+            <td v-if="tipo === 'plataforma'">{{ nomePlano(m.plano_uuid) }}</td>
             <td class="text-end">{{ formatarValor(m.valor_em_centavos) }}</td>
             <td>{{ formatarData(m.data_vencimento) }}</td>
             <td>
@@ -56,10 +60,9 @@
               <button
                 v-if="situacao(m) === 'pendente' || situacao(m) === 'atrasada'"
                 class="btn btn-sm btn-outline-success"
-                :disabled="salvando === m.uuid"
-                @click="marcarComoPaga(m)"
+                @click="abrirModal(m)"
               >
-                {{ salvando === m.uuid ? 'Salvando...' : 'Marcar como paga' }}
+                Registrar pagamento
               </button>
             </td>
           </tr>
@@ -67,11 +70,61 @@
       </table>
     </div>
 
-    <div v-if="modalAberto" class="modal-backdrop-custom">
+    <!-- Modal "Registrar pagamento" -->
+    <template v-if="mensalidadeSelecionada">
+      <div class="modal d-block" tabindex="-1" role="dialog" aria-labelledby="titulo-modal-pagamento" @click.self="fecharModal">
+        <div class="modal-dialog modal-dialog-centered">
+          <form class="modal-content" @submit.prevent="salvarPagamento">
+            <div class="modal-header">
+              <h5 id="titulo-modal-pagamento" class="modal-title">Registrar pagamento</h5>
+              <button type="button" class="btn-close" aria-label="Fechar" @click="fecharModal"></button>
+            </div>
+            <div class="modal-body">
+              <p class="text-muted small mb-3">
+                {{ nomeUsuario(mensalidadeSelecionada.usuario_uuid) }} · vencimento
+                {{ formatarData(mensalidadeSelecionada.data_vencimento) }} ·
+                {{ formatarValor(mensalidadeSelecionada.valor_em_centavos) }}
+              </p>
+
+              <div v-if="erroModal" class="alert alert-danger py-2">{{ erroModal }}</div>
+
+              <div class="mb-3">
+                <label for="pg-valor" class="form-label">Valor (R$)</label>
+                <input id="pg-valor" v-model.number="form.valor" type="number" min="0.01" step="0.01" class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label for="pg-data" class="form-label">Data do pagamento</label>
+                <input id="pg-data" v-model="form.data_pagamento" type="date" :max="hoje" class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label for="pg-forma" class="form-label">Forma de pagamento</label>
+                <select id="pg-forma" v-model="form.forma_pagamento" class="form-select" required>
+                  <option value="pix">PIX</option>
+                  <option value="dinheiro">Dinheiro</option>
+                </select>
+              </div>
+              <div>
+                <label for="pg-observacao" class="form-label">Observação</label>
+                <textarea id="pg-observacao" v-model="form.observacao" class="form-control" rows="2" maxlength="500"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" :disabled="salvando" @click="fecharModal">Cancelar</button>
+              <button type="submit" class="btn btn-success" :disabled="salvando">
+                {{ salvando ? 'Salvando...' : 'Registrar pagamento' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal-backdrop show"></div>
+    </template>
+
+    <div v-if="modalNovaAberto" class="modal-backdrop-custom">
       <div class="modal-card">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="mb-0">Nova mensalidade</h5>
-          <button class="btn-close" @click="modalAberto = false"></button>
+          <button class="btn-close" @click="modalNovaAberto = false"></button>
         </div>
 
         <div v-if="erroForm" class="alert alert-danger">{{ erroForm }}</div>
@@ -80,7 +133,7 @@
           <div class="row g-3">
             <div class="col-12">
               <label class="form-label" for="nova-usuario">Associação / usuário *</label>
-              <select id="nova-usuario" v-model="form.usuario_uuid" class="form-select" required>
+              <select id="nova-usuario" v-model="formNova.usuario_uuid" class="form-select" required>
                 <option value="" disabled>Selecione</option>
                 <option v-for="u in usuariosCobraveis" :key="u.uuid" :value="u.uuid">
                   {{ rotuloUsuarioCobravel(u) }}
@@ -89,7 +142,7 @@
             </div>
             <div class="col-12">
               <label class="form-label" for="nova-plano">Plano</label>
-              <select id="nova-plano" v-model="form.plano_uuid" class="form-select" @change="aplicarValorDoPlano">
+              <select id="nova-plano" v-model="formNova.plano_uuid" class="form-select" @change="aplicarValorDoPlano">
                 <option value="">Sem plano</option>
                 <option v-for="p in listaPlanos" :key="p.uuid" :value="p.uuid">
                   {{ p.nome }} ({{ formatarValor(p.valor_em_centavos) }})
@@ -98,17 +151,17 @@
             </div>
             <div class="col-md-6">
               <label class="form-label" for="nova-valor">Valor (R$) *</label>
-              <input id="nova-valor" v-model.number="form.valor" type="number" min="0.01" step="0.01" class="form-control" required />
+              <input id="nova-valor" v-model.number="formNova.valor" type="number" min="0.01" step="0.01" class="form-control" required />
             </div>
             <div class="col-md-6">
               <label class="form-label" for="nova-vencimento">Vencimento *</label>
-              <input id="nova-vencimento" v-model="form.data_vencimento" type="date" class="form-control" required />
+              <input id="nova-vencimento" v-model="formNova.data_vencimento" type="date" class="form-control" required />
             </div>
           </div>
           <p class="small text-muted mt-3 mb-0">A mensalidade é criada em aberto (aguardando pagamento).</p>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="button" class="btn btn-outline-secondary" @click="modalAberto = false">Cancelar</button>
+            <button type="button" class="btn btn-outline-secondary" @click="modalNovaAberto = false">Cancelar</button>
             <button type="submit" class="btn btn-success" :disabled="criando">
               {{ criando ? 'Salvando...' : 'Salvar' }}
             </button>
@@ -123,29 +176,35 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import api from '@/services/api'
-import { situacao, STATUS, STATUS_LABEL } from '@/store/modules/mensalidades'
+import { situacao, hojeISO, STATUS, STATUS_LABEL } from '@/store/modules/mensalidades'
 
 export default {
   name: 'MensalidadesList',
   setup() {
     const store = useStore()
     const filtroStatus = ref('')
-    const salvando = ref(null)
-    const erroAcao = ref('')
     const usuarios = ref({})
     const planos = ref({})
+    const mensagemSucesso = ref('')
+
+    const mensalidadeSelecionada = ref(null)
+    const form = reactive({ valor: null, data_pagamento: '', forma_pagamento: 'pix', observacao: '' })
+    const salvando = ref(false)
+    const erroModal = ref('')
+    const hoje = hojeISO()
     const cargos = ref({})
     const associacoes = ref({})
 
-    const modalAberto = ref(false)
+    const modalNovaAberto = ref(false)
     const criando = ref(false)
     const erroForm = ref('')
-    const form = reactive({ usuario_uuid: '', plano_uuid: '', valor: null, data_vencimento: '' })
+    const formNova = reactive({ usuario_uuid: '', plano_uuid: '', valor: null, data_vencimento: '' })
 
     const isAdminPlataforma = computed(() => store.getters['auth/cargoSlug'] === 'admin_plataforma')
     const mensalidades = computed(() => store.getters['mensalidades/allMensalidades'])
+    const tipo = computed(() => store.getters['mensalidades/tipo'])
     const isLoading = computed(() => store.getters['mensalidades/isLoading'])
-    const mensagemErro = computed(() => erroAcao.value || store.state.mensalidades.error)
+    const mensagemErro = computed(() => store.state.mensalidades.error)
 
     const mensalidadesFiltradas = computed(() => {
       if (!filtroStatus.value) return mensalidades.value
@@ -164,6 +223,7 @@ export default {
     // A API de mensalidades devolve só os UUIDs; os nomes vêm de /usuarios e /planos
     const indexarPorUuid = lista => Object.fromEntries((lista || []).map(item => [item.uuid, item]))
 
+    // Só mensalidade da plataforma tem plano (e /planos é restrito ao admin da plataforma)
     const carregarNomes = async () => {
       try {
         usuarios.value = indexarPorUuid((await api.get('/usuarios')).data)
@@ -207,40 +267,62 @@ export default {
       return `${dia}/${mes}/${ano}`
     }
 
-    const marcarComoPaga = async m => {
-      if (!confirm(`Marcar a mensalidade de ${nomeUsuario(m.usuario_uuid)} como paga hoje?`)) return
-      erroAcao.value = ''
-      salvando.value = m.uuid
-      const result = await store.dispatch('mensalidades/marcarComoPaga', m.uuid)
-      salvando.value = null
-      if (!result.success) erroAcao.value = result.message
+    const abrirModal = m => {
+      mensagemSucesso.value = ''
+      erroModal.value = ''
+      Object.assign(form, {
+        valor: Number(m.valor_em_centavos || 0) / 100,
+        data_pagamento: hoje,
+        forma_pagamento: 'pix',
+        observacao: ''
+      })
+      mensalidadeSelecionada.value = m
     }
 
-    const abrirModal = () => {
-      form.usuario_uuid = ''
-      form.plano_uuid = ''
-      form.valor = null
-      form.data_vencimento = ''
+    const fecharModal = () => {
+      if (salvando.value) return
+      mensalidadeSelecionada.value = null
+    }
+
+    const salvarPagamento = async () => {
+      erroModal.value = ''
+      salvando.value = true
+      const m = mensalidadeSelecionada.value
+      const result = await store.dispatch('mensalidades/registrarPagamento', { mensalidade: m, ...form })
+      salvando.value = false
+      if (!result.success) {
+        erroModal.value = result.message
+        return
+      }
+      mensalidadeSelecionada.value = null
+      mensagemSucesso.value = `Pagamento de ${formatarValor(Math.round(form.valor * 100))} registrado para ${nomeUsuario(m.usuario_uuid)}.`
+    }
+
+    const abrirNovaMensalidade = () => {
+      formNova.usuario_uuid = ''
+      formNova.plano_uuid = ''
+      formNova.valor = null
+      formNova.data_vencimento = ''
       erroForm.value = ''
-      modalAberto.value = true
+      modalNovaAberto.value = true
     }
 
     const aplicarValorDoPlano = () => {
-      const plano = planos.value[form.plano_uuid]
-      if (plano) form.valor = Number(plano.valor_em_centavos) / 100
+      const plano = planos.value[formNova.plano_uuid]
+      if (plano) formNova.valor = Number(plano.valor_em_centavos) / 100
     }
 
     const salvarNova = async () => {
       criando.value = true
       erroForm.value = ''
       const result = await store.dispatch('mensalidades/createMensalidade', {
-        usuario_uuid: form.usuario_uuid,
-        plano_uuid: form.plano_uuid || null,
-        valor_em_centavos: Math.round(Number(form.valor) * 100),
-        data_vencimento: form.data_vencimento
+        usuario_uuid: formNova.usuario_uuid,
+        plano_uuid: formNova.plano_uuid || null,
+        valor_em_centavos: Math.round(Number(formNova.valor) * 100),
+        data_vencimento: formNova.data_vencimento
       })
       criando.value = false
-      if (result.success) modalAberto.value = false
+      if (result.success) modalNovaAberto.value = false
       else erroForm.value = result.message
     }
 
@@ -251,10 +333,11 @@ export default {
 
     return {
       filtroStatus,
-      salvando,
+      tipo,
       isLoading,
       isAdminPlataforma,
       mensagemErro,
+      mensagemSucesso,
       mensalidadesFiltradas,
       classeSituacao,
       situacao,
@@ -266,12 +349,19 @@ export default {
       rotuloUsuarioCobravel,
       formatarValor,
       formatarData,
-      marcarComoPaga,
-      modalAberto,
+      mensalidadeSelecionada,
+      form,
+      salvando,
+      erroModal,
+      hoje,
+      abrirModal,
+      fecharModal,
+      salvarPagamento,
+      modalNovaAberto,
       criando,
       erroForm,
-      form,
-      abrirModal,
+      formNova,
+      abrirNovaMensalidade,
       aplicarValorDoPlano,
       salvarNova
     }

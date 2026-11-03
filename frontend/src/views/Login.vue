@@ -38,8 +38,9 @@
             </button>
           </form>
 
-          <div class="mt-3 text-center">
-            <a href="#" class="text-success small">Esqueceu sua senha?</a>
+          <!-- "Esqueceu sua senha?" ocultado: recuperação de senha está fora do MVP (sem backend) -->
+          <div class="mt-3 text-center small">
+            Ainda não tem conta? <router-link to="/cadastro" class="text-success">Criar conta</router-link>
           </div>
         </div>
       </div>
@@ -50,7 +51,7 @@
 <script>
 import { ref, reactive } from 'vue'
 import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import FormInput from '@/components/FormInput.vue'
 
 export default {
@@ -61,9 +62,11 @@ export default {
   setup() {
     const store = useStore()
     const router = useRouter()
+    const route = useRoute()
     
     const form = reactive({
-      email: '',
+      // Vindo do cadastro, o e-mail chega preenchido (?email=)
+      email: route.query.email || '',
       password: ''
     })
     

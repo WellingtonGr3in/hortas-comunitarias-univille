@@ -18,6 +18,13 @@ class MensalidadeDaAssociacaoRepository
         return $this->mensalidadeDaAssociacaoModel->where($conditions)->get();
     }
 
+    // SELECT ... FOR UPDATE: segura a linha até o fim da transação, para dois pagamentos
+    // simultâneos da mesma mensalidade não passarem os dois pela checagem de duplicidade
+    public function findByUuidParaAtualizar(string $uuid): ?MensalidadeDaAssociacaoModel
+    {
+        return $this->mensalidadeDaAssociacaoModel->newQuery()->where('uuid', $uuid)->lockForUpdate()->first();
+    }
+
     public function findByUuid(string $uuid): ?MensalidadeDaAssociacaoModel
     {
         return $this->mensalidadeDaAssociacaoModel->find($uuid);

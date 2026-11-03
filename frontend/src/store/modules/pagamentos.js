@@ -94,7 +94,7 @@ const actions = {
       return { success: true }
     } catch (err) {
       throw new Error(
-        err.response?.data?.message || 'Erro ao deletar pagamento'
+        err.response?.data?.error || err.response?.data?.message || 'Erro ao estornar pagamento'
       )
     }
   }

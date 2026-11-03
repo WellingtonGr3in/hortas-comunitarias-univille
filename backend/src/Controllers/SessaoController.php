@@ -24,13 +24,10 @@ class SessaoController
 
         $data = (array)$request->getParsedBody();
 
-        try {
-            $token = $this->sessaoService->signIn($data['email'] ?? '', $data['senha'] ?? '', $payloadUsuarioLogado);
-            $response->getBody()->write(json_encode(['token' => $token]));
-        } catch (\Exception $e) {
-            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
-            return $response->withStatus(401);
-        }
+        // Credencial errada vira 401 (CredenciaisInvalidasException) no FormatadorDeErrosMiddleware;
+        // qualquer outra falha segue o fluxo normal e responde 500
+        $token = $this->sessaoService->signIn((string) ($data['email'] ?? ''), (string) ($data['senha'] ?? ''), $payloadUsuarioLogado);
+        $response->getBody()->write(json_encode(['token' => $token]));
 
         return $response;
     }

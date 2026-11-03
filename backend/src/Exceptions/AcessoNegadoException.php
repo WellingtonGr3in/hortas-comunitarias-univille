@@ -2,13 +2,16 @@
 
 namespace App\Exceptions;
 
-use Exception;
-
-// Usuário logado tentando ver ou mudar algo fora do que o cargo dele permite (HTTP 403).
-class AcessoNegadoException extends Exception
+/** O usuário logado não tem permissão para a operação. */
+class AcessoNegadoException extends AppException
 {
     public function __construct(string $message = 'Acesso negado')
     {
-        parent::__construct($message, 403);
+        parent::__construct($message);
+    }
+
+    public function getStatusHttp(): int
+    {
+        return 403;
     }
 }

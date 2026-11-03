@@ -12,16 +12,16 @@ class CanteiristaRepository
         return CanteiristaModel::where('excluido', false)->get();
     }
 
-    public function findByUuid(string $uuid)
+    public function findByUsuarioUuid(string $usuarioUuid)
     {
-        return CanteiristaModel::where('uuid', $uuid)
+        return CanteiristaModel::where('usuario_uuid', $usuarioUuid)
             ->where('excluido', false)
             ->first();
     }
 
-    public function findByUsuarioUuid(string $usuarioUuid)
+    public function findByUuid(string $uuid)
     {
-        return CanteiristaModel::where('usuario_uuid', $usuarioUuid)
+        return CanteiristaModel::where('uuid', $uuid)
             ->where('excluido', false)
             ->first();
     }

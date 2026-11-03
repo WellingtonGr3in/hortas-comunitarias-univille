@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\AcessoNegadoException;
+use App\Exceptions\ConflitoException;
 use App\Models\AssociacaoModel;
 use App\Repositories\AssociacaoRepository;
 use App\Repositories\HortaRepository;
@@ -84,6 +85,11 @@ class AssociacaoService
         // Validação mínima - apenas nome é obrigatório (após o mapeamento)
         if (empty($data['razao_social'])) {
             throw new Exception("Nome da associação é obrigatório");
+        }
+        
+        // CNPJ é UNIQUE no banco: sem esta checagem, o duplicado vira erro de SQL (500)
+        if (!empty($data['cnpj']) && $this->associacaoRepository->findByCnpj($data['cnpj'])) {
+            throw new ConflitoException('Já existe uma associação com este CNPJ');
         }
 
         // Gerar CNPJ temporário se não fornecido (para não violar constraint UNIQUE)
