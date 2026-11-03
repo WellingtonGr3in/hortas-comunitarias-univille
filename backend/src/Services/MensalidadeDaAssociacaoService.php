@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\MensalidadeDaAssociacaoModel;
 use App\Repositories\MensalidadeDaAssociacaoRepository;
 use Respect\Validation\Validator as v;
@@ -42,7 +43,7 @@ class MensalidadeDaAssociacaoService
                 ]);
                 
             case 'admin_horta_geral':
-                $usuarios = $this->usuarioService->findAllWhere(["horta_uuid" => $payloadUsuarioLogado['horta_uuid']]);
+                $usuarios = $this->usuarioService->findAllWhere($payloadUsuarioLogado);
                 return $this->mensalidadeDaAssociacaoRepository->findAllWhere([
                     'excluido' => 0,
                     'usuario_uuid' => $usuarios
@@ -56,7 +57,7 @@ class MensalidadeDaAssociacaoService
                 ]);
                 
             default:
-                throw new Exception("Permissão de cargo 0,1,2,3,4 necessária | findAllWhere");
+                throw new AcessoNegadoException("Permissão de cargo 0,1,2,3,4 necessária | findAllWhere");
         } 
     }
 
@@ -74,26 +75,26 @@ class MensalidadeDaAssociacaoService
                 
             case 'admin_associacao_geral':
                 if ($mensalidadeDaAssociacao->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta mensalidade");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta mensalidade");
                 }
                 return $mensalidadeDaAssociacao;
                 
             case 'admin_horta_geral':
                 $usuario = $this->usuarioService->findByUuid($mensalidadeDaAssociacao->usuario_uuid, $payloadUsuarioLogado);
                 if ($usuario->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta mensalidade");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta mensalidade");
                 }
                 return $mensalidadeDaAssociacao;
                 
             case 'canteirista':
             case 'dependente':
                 if ($mensalidadeDaAssociacao->usuario_uuid !== $payloadUsuarioLogado['usuario_uuid']) {
-                    throw new Exception("Você só pode acessar suas próprias mensalidades");
+                    throw new AcessoNegadoException("Você só pode acessar suas próprias mensalidades");
                 }
                 return $mensalidadeDaAssociacao;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByUuid");
         }
     }
 
@@ -114,16 +115,16 @@ class MensalidadeDaAssociacaoService
                 
             case 'admin_associacao_geral':
                 if ($associacaoUuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar mensalidades desta associação");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar mensalidades desta associação");
                 }
                 $mensalidades = $this->mensalidadeDaAssociacaoRepository->findByAssociacaoUuid($associacaoUuid);
                 break;
                 
             case 'admin_horta_geral':
                 if ($associacaoUuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar mensalidades desta associação");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar mensalidades desta associação");
                 }
-                $usuarios = $this->usuarioService->findAllWhere(["horta_uuid" => $payloadUsuarioLogado['horta_uuid']]);
+                $usuarios = $this->usuarioService->findAllWhere($payloadUsuarioLogado);
                 $mensalidades = $this->mensalidadeDaAssociacaoRepository->findByAssociacaoUuid($associacaoUuid)
                     ->filter(function($m) use ($usuarios) {
                         return $usuarios->contains('uuid', $m->usuario_uuid);
@@ -139,7 +140,7 @@ class MensalidadeDaAssociacaoService
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByAssociacaoUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByAssociacaoUuid");
         }
         
         if ($mensalidades->isEmpty()) {
@@ -164,14 +165,14 @@ class MensalidadeDaAssociacaoService
                 
             case 'admin_associacao_geral':
                 if ($usuario->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar mensalidades deste usuário");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar mensalidades deste usuário");
                 }
                 $mensalidades = $this->mensalidadeDaAssociacaoRepository->findByUsuarioUuid($usuarioUuid);
                 break;
                 
             case 'admin_horta_geral':
                 if ($usuario->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar mensalidades deste usuário");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar mensalidades deste usuário");
                 }
                 $mensalidades = $this->mensalidadeDaAssociacaoRepository->findByUsuarioUuid($usuarioUuid);
                 break;
@@ -179,13 +180,13 @@ class MensalidadeDaAssociacaoService
             case 'canteirista':
             case 'dependente':
                 if ($usuarioUuid !== $payloadUsuarioLogado['usuario_uuid']) {
-                    throw new Exception("Você só pode acessar suas próprias mensalidades");
+                    throw new AcessoNegadoException("Você só pode acessar suas próprias mensalidades");
                 }
                 $mensalidades = $this->mensalidadeDaAssociacaoRepository->findByUsuarioUuid($usuarioUuid);
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByUsuarioUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByUsuarioUuid");
         }
         
         if ($mensalidades->isEmpty()) {
@@ -205,22 +206,30 @@ class MensalidadeDaAssociacaoService
             case 'admin_associacao_geral':
                 // Só pode criar para sua própria associação
                 if (!empty($data['associacao_uuid']) && $data['associacao_uuid'] !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você só pode criar mensalidades para sua própria associação");
+                    throw new AcessoNegadoException("Você só pode criar mensalidades para sua própria associação");
                 }
+                $data['associacao_uuid'] = $payloadUsuarioLogado['associacao_uuid'];
                 break;
-                
+
             default:
-                throw new Exception("Permissão insuficiente 0,1 | create");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1 | create");
         }
-        
+
+        // Status: ver mapa documentado em MensalidadeDaPlataformaService (0 = aguardando pagamento)
+        $data['status'] = $data['status'] ?? 0;
+        $data['dias_atraso'] = $data['dias_atraso'] ?? 0;
+        foreach (['data_pagamento', 'url_anexo', 'url_recibo'] as $campo) {
+            if (array_key_exists($campo, $data) && $data[$campo] === '') $data[$campo] = null;
+        }
+
         v::key('valor_em_centavos', v::intType()->positive())
         ->key('usuario_uuid', v::uuid())
         ->key('associacao_uuid', v::uuid())
         ->key('data_vencimento',  v::date('Y-m-d'))
-        ->key('data_pagamento', v::optional(v::date('Y-m-d')))
-        ->key('status', v::intType()->positive())
-        ->key('dias_atraso', v::intType()->positive())
-        ->key('url_anexo', v::optional(v::url()))
+        ->key('data_pagamento', v::optional(v::date('Y-m-d')), false)
+        ->key('status', v::intType()->between(0, 4))
+        ->key('dias_atraso', v::intType()->min(0))
+        ->key('url_anexo', v::optional(v::url()), false)
         ->key('url_recibo', v::optional(v::url()), false)
         ->check($data);
 
@@ -258,21 +267,22 @@ class MensalidadeDaAssociacaoService
             case 'admin_associacao_geral':
                 // Só pode editar mensalidades da sua associação
                 if ($mensalidadeDaAssociacao->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para editar esta mensalidade");
+                    throw new AcessoNegadoException("Você não tem permissão para editar esta mensalidade");
                 }
+                unset($data['associacao_uuid']);
                 break;
-                
+
             default:
-                throw new Exception("Permissão insuficiente 0,1 | update");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1 | update");
         }
 
         v::key('valor_em_centavos', v::intType()->positive(), false)
         ->key('usuario_uuid', v::uuid(), false)
         ->key('associacao_uuid', v::uuid(), false)
         ->key('data_vencimento',  v::date('Y-m-d'), false)
-        ->key('data_pagamento', v::date('Y-m-d'), false)
-        ->key('status', v::intType()->positive(), false)
-        ->key('dias_atraso', v::intType()->positive(), false)
+        ->key('data_pagamento', v::optional(v::date('Y-m-d')), false)
+        ->key('status', v::intType()->between(0, 4), false)
+        ->key('dias_atraso', v::intType()->min(0), false)
         ->key('url_anexo', v::optional(v::url()), false)
         ->key('url_recibo', v::optional(v::url()), false)
         ->check($data);
@@ -285,7 +295,7 @@ class MensalidadeDaAssociacaoService
             $this->associacaoService->findByUuid($data['associacao_uuid'], $payloadUsuarioLogado);
         }
 
-        $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao'];
+        $guarded = ['uuid', 'usuario_criador_uuid', 'data_de_criacao', 'data_de_ultima_alteracao', 'excluido'];
         foreach ($guarded as $g) unset($data[$g]);
 
         $data['usuario_alterador_uuid'] = $payloadUsuarioLogado['usuario_uuid'];
@@ -309,12 +319,12 @@ class MensalidadeDaAssociacaoService
             case 'admin_associacao_geral':
                 // Só pode deletar mensalidades da sua associação
                 if ($mensalidadeDaAssociacao->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para deletar esta mensalidade");
+                    throw new AcessoNegadoException("Você não tem permissão para deletar esta mensalidade");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1 | delete");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1 | delete");
         }
         
         $data = [

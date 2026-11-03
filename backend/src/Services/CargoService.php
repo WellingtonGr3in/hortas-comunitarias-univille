@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\CargoModel;
 use App\Repositories\CargoRepository;
 use Respect\Validation\Validator as v;
@@ -23,7 +24,7 @@ class CargoService
             !$this->isCargoAdminASsociacao($payloadUsuarioLogado) &&
             !$this->isCargoAdminHorta($payloadUsuarioLogado)
         ){
-            throw new Exception("Permissão de cargo 0,1,2 necessária | findAllWhere");
+            throw new AcessoNegadoException("Permissão de cargo 0,1,2 necessária | findAllWhere");
         } 
         return $this->cargoRepository->findAllWhere(['excluido' => 0]);
     }
@@ -34,7 +35,7 @@ class CargoService
             !$this->isCargoAdminASsociacao($payloadUsuarioLogado) &&
             !$this->isCargoAdminHorta($payloadUsuarioLogado)
         ){
-            throw new Exception("Permissão de cargo 0,1,2 necessária | findByUuid");
+            throw new AcessoNegadoException("Permissão de cargo 0,1,2 necessária | findByUuid");
         } 
         $cargo = $this->cargoRepository->findByUuid($uuid);
         if(!$cargo || $cargo->excluido){
@@ -53,7 +54,7 @@ class CargoService
 
     public function create(array $data, array $payloadUsuarioLogado): CargoModel {
         if(!$this->isCargoAdminPlataforma($payloadUsuarioLogado)){
-            throw new Exception("Permissão de cargo 0 necessária | create");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | create");
         }
         v::key('codigo', v::intType()->between(0,5))
           ->key('slug', v::stringType()->notEmpty())
@@ -74,7 +75,7 @@ class CargoService
 
     public function update(string $uuid, array $data, array $payloadUsuarioLogado): CargoModel {
         if(!$this->isCargoAdminPlataforma($payloadUsuarioLogado)){
-            throw new Exception("Permissão de cargo 0 necessária | update");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | update");
         }
         $cargo = $this->cargoRepository->findByUuid($uuid);
         if(!$cargo || $cargo->excluido){

@@ -73,8 +73,8 @@ $routes($app);
 // --------------- Middlewares
 $app->addBodyParsingMiddleware();
 
-// Sistema de permissões desabilitado temporariamente
-// $app->add(RoutePermissionMiddleware::class);
+// Slim executa o último middleware adicionado primeiro: o JWT roda antes da checagem de permissão.
+$app->add(RoutePermissionMiddleware::class);
 
 $app->add(JwtMiddleware::class);
 $app->add(FormatadorDeErrosMiddleware::class);

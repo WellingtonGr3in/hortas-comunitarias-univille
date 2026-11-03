@@ -75,7 +75,7 @@ function Install-Archive($name, $url, $sha256, $archivePath, $destination, $requ
 if (!(Test-Path -LiteralPath $php)) {
     $phpArchive = Join-Path $runtime 'php.zip'
     if (Test-Path -LiteralPath $phpDirectory) { [System.IO.Directory]::Delete($phpDirectory, $true) }
-    Get-VerifiedFile 'PHP' 'https://windows.php.net/downloads/releases/php-8.3.33-nts-Win32-vs16-x64.zip' '534399107056313246F424ADBBB7937337E40FBBF6AA7BC26287BA9CFD2E4A2A' $phpArchive
+    Get-VerifiedFile 'PHP' 'https://windows.php.net/downloads/releases/archives/php-8.3.33-nts-Win32-vs16-x64.zip' '534399107056313246F424ADBBB7937337E40FBBF6AA7BC26287BA9CFD2E4A2A' $phpArchive
     New-Item -ItemType Directory -Force -Path $phpDirectory | Out-Null
     Expand-Archive -LiteralPath $phpArchive -DestinationPath $phpDirectory -Force
     [System.IO.File]::Delete($phpArchive)

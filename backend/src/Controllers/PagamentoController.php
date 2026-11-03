@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Services\PagamentoService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -45,7 +46,7 @@ class PagamentoController
     public function get(Request $request, Response $response, array $args): Response
     {
         try {
-            $pagamento = $this->service->findByUuid($args['id']);
+            $pagamento = $this->service->findByUuid($args['id'], $this->payloadUsuarioLogado($request));
             
             $data = [
                 'id' => $pagamento->uuid,
@@ -70,6 +71,14 @@ class PagamentoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        } catch (\DomainException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -83,7 +92,7 @@ class PagamentoController
     {
         try {
             $data = $request->getParsedBody();
-            $pagamento = $this->service->create($data);
+            $pagamento = $this->service->create($data, $this->payloadUsuarioLogado($request));
 
             $responseData = [
                 'id' => $pagamento->uuid,
@@ -106,6 +115,14 @@ class PagamentoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        } catch (\DomainException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -119,7 +136,7 @@ class PagamentoController
     {
         try {
             $data = $request->getParsedBody();
-            $pagamento = $this->service->update($args['id'], $data);
+            $pagamento = $this->service->update($args['id'], $data, $this->payloadUsuarioLogado($request));
 
             $responseData = [
                 'id' => $pagamento->uuid,
@@ -142,6 +159,14 @@ class PagamentoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        } catch (\DomainException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,

@@ -18,9 +18,7 @@ class MensalidadeDaPlataformaModel extends Model
     protected $fillable = [
         'uuid',
         'usuario_uuid',
-        'associacao_uuid',
         'valor_em_centavos',
-        'mes_referencia',
         'plano_uuid',
         'data_vencimento',
         'data_pagamento',
@@ -39,9 +37,9 @@ class MensalidadeDaPlataformaModel extends Model
         return $this->belongsTo(UsuarioModel::class, 'usuario_uuid', 'uuid');
     }
 
-    public function associacao()
+    public function plano()
     {
-        return $this->belongsTo(AssociacaoModel::class, 'associacao_uuid', 'uuid');
+        return $this->belongsTo(PlanoModel::class, 'plano_uuid', 'uuid');
     }
 
     public function usuarioCriador()

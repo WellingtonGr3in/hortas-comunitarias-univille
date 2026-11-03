@@ -56,4 +56,4 @@ for ($attempt = 0; $attempt -lt 180; $attempt++) {
 if (!$frontendReady) { throw 'O frontend não respondeu corretamente. Consulte .runtime/frontend-error.log.' }
 
 Write-Host 'Projeto disponível em http://localhost:3000'
-Write-Host 'Demonstração: admin@email.com / admin'
+Write-Host 'Usuários de teste (senha 123456): plataforma@gmail.com, associacao@gmail.com, horta@gmail.com, canteirista@gmail.com'

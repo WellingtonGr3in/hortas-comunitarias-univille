@@ -1,0 +1,11 @@
+# O build usa a raiz do repositório como contexto; nada disso deve entrar nas imagens.
+.git
+.runtime
+mobile
+docs
+postman
+**/node_modules
+**/vendor
+**/.env
+frontend/dist
+*.log

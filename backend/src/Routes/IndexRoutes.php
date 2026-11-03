@@ -79,6 +79,12 @@ return function (App $app) {
 
         $filaDeUsuarioRoutes = require __DIR__ . '/FilaDeUsuarioRoutes.php';
         $filaDeUsuarioRoutes($group); 
+
+        $itemDoInventarioRoutes = require __DIR__ . '/ItemDoInventarioRoutes.php';
+        $itemDoInventarioRoutes($group);
+
+        $movimentacaoDoInventarioRoutes = require __DIR__ . '/MovimentacaoDoInventarioRoutes.php';
+        $movimentacaoDoInventarioRoutes($group);
     });
 };
 

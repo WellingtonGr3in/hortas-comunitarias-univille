@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\EnderecoModel;
 use App\Repositories\EnderecoRepository;
 use Respect\Validation\Validator as v;
@@ -32,7 +33,7 @@ class EnderecoService
             case 'dependente':
                 return $this->enderecoRepository->findAllWhere(['excluido' => 0]);
             default:
-                throw new Exception("Permissão insuficiente | findAllWhere");
+                throw new AcessoNegadoException("Permissão insuficiente | findAllWhere");
         }
     }
 
@@ -53,7 +54,7 @@ class EnderecoService
             case 'dependente':
                 return $endereco;
             default:
-                throw new Exception("Permissão insuficiente | findByUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByUuid");
         }
     }
 
@@ -67,7 +68,7 @@ class EnderecoService
             case 'admin_horta_geral':
                 break; // permitido criar
             default:
-                throw new Exception("Permissão insuficiente | create");
+                throw new AcessoNegadoException("Permissão insuficiente | create");
         }
 
         v::key('tipo_logradouro', v::stringType()->length(0, 50))
@@ -107,7 +108,7 @@ class EnderecoService
             case 'admin_horta_geral':
                 break; // permitido editar
             default:
-                throw new Exception("Permissão insuficiente | update");
+                throw new AcessoNegadoException("Permissão insuficiente | update");
         }
 
         v::key('tipo_logradouro', v::stringType()->length(0, 50), false)
@@ -145,7 +146,7 @@ class EnderecoService
             case 'admin_horta_geral':
                 break; // permitido deletar
             default:
-                throw new Exception("Permissão insuficiente | delete");
+                throw new AcessoNegadoException("Permissão insuficiente | delete");
         }
 
         $data = [

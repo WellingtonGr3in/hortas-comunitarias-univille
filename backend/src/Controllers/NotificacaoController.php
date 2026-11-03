@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Services\NotificacaoService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Exceptions\AcessoNegadoException;
 use InvalidArgumentException;
 
 class NotificacaoController
@@ -19,7 +20,7 @@ class NotificacaoController
     public function list(Request $request, Response $response): Response
     {
         try {
-            $notificacoes = $this->service->findAll();
+            $notificacoes = $this->service->findAll($this->payloadUsuarioLogado($request));
             $lidas = array_flip($this->service->findUuidsLidas($request->getAttribute('usuario_uuid')));
             
             $formatted = $notificacoes->map(function ($n) use ($lidas) {
@@ -47,6 +48,8 @@ class NotificacaoController
                 'data' => $formatted
             ]));
             return $response->withHeader('Content-Type', 'application/json');
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -59,7 +62,7 @@ class NotificacaoController
     public function listAtivas(Request $request, Response $response): Response
     {
         try {
-            $notificacoes = $this->service->findAtivas();
+            $notificacoes = $this->service->findAtivas($this->payloadUsuarioLogado($request));
             $lidas = array_flip($this->service->findUuidsLidas($request->getAttribute('usuario_uuid')));
             
             $formatted = $notificacoes->map(function ($n) use ($lidas) {
@@ -80,6 +83,8 @@ class NotificacaoController
                 'data' => $formatted
             ]));
             return $response->withHeader('Content-Type', 'application/json');
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -92,7 +97,7 @@ class NotificacaoController
     public function get(Request $request, Response $response, array $args): Response
     {
         try {
-            $notificacao = $this->service->findByUuid($args['id']);
+            $notificacao = $this->service->findByUuid($args['id'], $this->payloadUsuarioLogado($request));
             
             $data = [
                 'id' => $notificacao->uuid,
@@ -121,6 +126,8 @@ class NotificacaoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -134,7 +141,7 @@ class NotificacaoController
     {
         try {
             $data = $request->getParsedBody();
-            $notificacao = $this->service->create($data);
+            $notificacao = $this->service->create($data, $this->payloadUsuarioLogado($request));
 
             $responseData = [
                 'id' => $notificacao->uuid,
@@ -159,6 +166,8 @@ class NotificacaoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -172,7 +181,7 @@ class NotificacaoController
     {
         try {
             $data = $request->getParsedBody();
-            $notificacao = $this->service->update($args['id'], $data);
+            $notificacao = $this->service->update($args['id'], $data, $this->payloadUsuarioLogado($request));
 
             $responseData = [
                 'id' => $notificacao->uuid,
@@ -197,6 +206,8 @@ class NotificacaoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -209,7 +220,7 @@ class NotificacaoController
     public function marcarLida(Request $request, Response $response, array $args): Response
     {
         try {
-            $this->service->marcarComoLida($args['id'], $request->getAttribute('usuario_uuid'));
+            $this->service->marcarComoLida($args['id'], $this->payloadUsuarioLogado($request));
 
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -227,7 +238,7 @@ class NotificacaoController
 
     public function marcarTodasLidas(Request $request, Response $response): Response
     {
-        $marcadas = $this->service->marcarTodasComoLidas($request->getAttribute('usuario_uuid'));
+        $marcadas = $this->service->marcarTodasComoLidas($this->payloadUsuarioLogado($request));
 
         $response->getBody()->write(json_encode([
             'success' => true,
@@ -240,7 +251,7 @@ class NotificacaoController
     public function delete(Request $request, Response $response, array $args): Response
     {
         try {
-            $this->service->delete($args['id']);
+            $this->service->delete($args['id'], $this->payloadUsuarioLogado($request));
             
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -253,6 +264,8 @@ class NotificacaoController
                 'message' => $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        } catch (AcessoNegadoException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -261,5 +274,14 @@ class NotificacaoController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
     }
-}
 
+    private function payloadUsuarioLogado(Request $request): array
+    {
+        return [
+            'usuario_uuid' => $request->getAttribute('usuario_uuid'),
+            'cargo_uuid' => $request->getAttribute('cargo_uuid'),
+            'associacao_uuid' => $request->getAttribute('associacao_uuid'),
+            'horta_uuid' => $request->getAttribute('horta_uuid'),
+        ];
+    }
+}

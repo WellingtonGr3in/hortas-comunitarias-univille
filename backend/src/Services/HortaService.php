@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\HortaModel;
 use App\Repositories\HortaRepository;
 use Respect\Validation\Validator as v;
@@ -46,7 +47,7 @@ class HortaService
                 ], $condition));
                 
             default:
-                throw new Exception("Permissão insuficiente | findAllWhere");
+                throw new AcessoNegadoException("Permissão insuficiente | findAllWhere");
         }
     }
     
@@ -64,7 +65,7 @@ class HortaService
                 
             case 'admin_associacao_geral':
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta horta");
                 }
                 return $horta;
                 
@@ -72,12 +73,12 @@ class HortaService
             case 'canteirista':
             case 'dependente':
                 if ($horta->uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta horta");
                 }
                 return $horta;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByUuid");
         }
     }
 
@@ -99,12 +100,12 @@ class HortaService
             case 'admin_associacao_geral':
                 // Só pode criar horta para sua própria associação
                 if (!empty($data['associacao_vinculada_uuid']) && $data['associacao_vinculada_uuid'] !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você só pode criar hortas para sua própria associação");
+                    throw new AcessoNegadoException("Você só pode criar hortas para sua própria associação");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1 | create");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1 | create");
         }
         
         
@@ -185,21 +186,27 @@ class HortaService
             case 'admin_associacao_geral':
                 // Só pode editar hortas da sua associação
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para editar esta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para editar esta horta");
                 }
                 break;
                 
             case 'admin_horta_geral':
                 // Só pode editar sua própria horta
                 if ($horta->uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para editar esta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para editar esta horta");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1,2 | update");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1,2 | update");
         }
-        
+
+        // Só o admin da plataforma muda a horta de associação
+        if ($cargo !== 'admin_plataforma' && !empty($data['associacao_vinculada_uuid'])
+            && $data['associacao_vinculada_uuid'] !== $horta->associacao_vinculada_uuid) {
+            throw new AcessoNegadoException("Você não pode mudar a horta de associação");
+        }
+
         
         // Mapeamento de campos do frontend para o backend
         if (isset($data['nome']) && !isset($data['nome_da_horta'])) {
@@ -257,19 +264,19 @@ class HortaService
             case 'admin_associacao_geral':
                 // Só pode deletar hortas da sua associação
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para deletar esta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para deletar esta horta");
                 }
                 break;
                 
             case 'admin_horta_geral':
                 // Só pode deletar sua própria horta
                 if ($horta->uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para deletar esta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para deletar esta horta");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1,2 | delete");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1,2 | delete");
         }
         
 

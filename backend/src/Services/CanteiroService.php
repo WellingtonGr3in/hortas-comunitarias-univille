@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\CanteiroModel;
 use App\Repositories\CanteiroRepository;
 use Respect\Validation\Validator as v;
@@ -12,17 +13,17 @@ use Ramsey\Uuid\Uuid;
 class CanteiroService
 {
     protected CanteiroRepository $canteiroRepository;
-    protected HortaService $hortaService; 
-    protected UsuarioService $usuarioService; 
+    protected HortaService $hortaService;
+    protected UsuarioService $usuarioService;
     protected CargoService $cargoService;
 
     public function __construct(
-        CanteiroRepository $canteiroRepository, 
-        HortaService $hortaService, 
+        CanteiroRepository $canteiroRepository,
+        HortaService $hortaService,
         UsuarioService $usuarioService,
         CargoService $cargoService
     ) {
-        $this->canteiroRepository = $canteiroRepository; 
+        $this->canteiroRepository = $canteiroRepository;
         $this->hortaService = $hortaService;
         $this->usuarioService = $usuarioService;
         $this->cargoService = $cargoService;
@@ -40,7 +41,7 @@ class CanteiroService
                 $hortasUuids = $hortas->pluck('uuid')->toArray();
 
                 return $this->canteiroRepository->findAllWhere(['excluido' => 0])
-                    ->filter(fn($canteiro) => in_array($canteiro->horta_uuid, $hortasUuids));
+                    ->filter(fn($canteiro) => in_array($canteiro->horta_uuid, $hortasUuids))->values();
 
             case 'admin_horta_geral':
                 return $this->canteiroRepository->findAllWhere([
@@ -49,53 +50,58 @@ class CanteiroService
                 ]);
 
             case 'canteirista':
-                return CanteiroModel::whereHas('usuarios', function ($q) use ($payloadUsuarioLogado) {
-                    $q->where('usuario_uuid', $payloadUsuarioLogado['usuario_uuid']);
-                })->where('excluido', 0)->with('horta')->get();
+                return $this->queryCanteirosDoUsuario($payloadUsuarioLogado['usuario_uuid'])->with('horta')->get();
 
             default:
-                // Other roles (e.g. dependente) - restrict to linked canteiros
-                return CanteiroModel::whereHas('usuarios', function ($q) use ($payloadUsuarioLogado) {
-                    $q->where('usuario_uuid', $payloadUsuarioLogado['usuario_uuid']);
-                })->where('excluido', 0)->with('horta')->get();
+                throw new AcessoNegadoException('Permissão insuficiente para consultar canteiros');
         }
     }
-    
+
     public function findByUuid(string $uuid, array $payloadUsuarioLogado): ?CanteiroModel
     {
-        // TODO: Reativar verificações de permissão em produção
-        
         $canteiro = $this->canteiroRepository->findByUuid($uuid);
         if (!$canteiro || $canteiro->excluido) {
             throw new Exception('Canteiro não encontrado');
         }
-        
+
+        $cargo = $this->getCargoSlug($payloadUsuarioLogado);
+        if ($cargo === 'canteirista') {
+            $meu = $this->queryCanteirosDoUsuario($payloadUsuarioLogado['usuario_uuid'])->where('uuid', $uuid)->exists();
+            if (!$meu) {
+                throw new AcessoNegadoException('Você só pode ver os seus canteiros');
+            }
+            return $canteiro;
+        }
+
+        $this->assertCargoPodeAlterar($cargo);
+        $this->assertPertencimento($cargo, $canteiro->horta, $payloadUsuarioLogado);
         return $canteiro;
     }
 
     public function create(array $data, array $payloadUsuarioLogado): CanteiroModel
     {
-        // TODO: Reativar verificações de permissão em produção
-        
+        $cargo = $this->getCargoSlug($payloadUsuarioLogado);
+        $this->assertCargoPodeAlterar($cargo);
+
         $guarded = ['uuid','usuario_criador_uuid','data_de_criacao','data_de_ultima_alteracao','excluido'];
         foreach ($guarded as $g) unset($data[$g]);
-        
+
         // Extrair usuario_uuid se fornecido (para criar ownership)
         $ownerUuid = $data['usuario_uuid'] ?? null;
         unset($data['usuario_uuid']);
-        
+
         // Mapear campo 'nome' para 'numero_identificador' se necessário
         if (isset($data['nome']) && !isset($data['numero_identificador'])) {
             $data['numero_identificador'] = $data['nome'];
             unset($data['nome']);
         }
-        
+
         // Mapear campo 'area' para 'tamanho_m2' se necessário
         if (isset($data['area']) && !isset($data['tamanho_m2'])) {
             $data['tamanho_m2'] = $data['area'];
             unset($data['area']);
         }
-        
+
         // Validação: Número identificador obrigatório
         if (empty($data['numero_identificador'])) {
             throw new Exception("Número identificador é obrigatório");
@@ -103,7 +109,7 @@ class CanteiroService
         if (!is_string($data['numero_identificador']) || strlen(trim($data['numero_identificador'])) === 0) {
             throw new Exception("Número identificador deve ser uma string válida");
         }
-        
+
         // Validação: Tamanho obrigatório e positivo
         if (empty($data['tamanho_m2'])) {
             throw new Exception("Tamanho em m² é obrigatório");
@@ -111,7 +117,7 @@ class CanteiroService
         if (!is_numeric($data['tamanho_m2']) || $data['tamanho_m2'] <= 0) {
             throw new Exception("Tamanho deve ser um número positivo");
         }
-        
+
         // Validação: Horta obrigatória
         if (empty($data['horta_uuid'])) {
             throw new Exception("Horta é obrigatória");
@@ -119,13 +125,14 @@ class CanteiroService
         if (!is_string($data['horta_uuid'])) {
             throw new Exception("UUID da horta deve ser uma string");
         }
-        
+
         // Validação: Horta deve existir (usar repository para validação interna)
         $horta = $this->hortaService->findByUuidForValidation($data['horta_uuid']);
         if (!$horta || $horta->excluido) {
             throw new Exception("Horta não encontrada ou foi excluída");
         }
-        
+        $this->assertPertencimento($cargo, $horta, $payloadUsuarioLogado);
+
         // Validação: Se proprietário foi fornecido, validar que ele existe
         if (!empty($ownerUuid)) {
             if (!is_string($ownerUuid)) {
@@ -135,6 +142,9 @@ class CanteiroService
             if (!$owner || $owner->excluido) {
                 throw new Exception("Usuário proprietário não encontrado ou foi excluído");
             }
+            if ($cargo !== 'admin_plataforma' && $owner->horta_uuid !== $horta->uuid) {
+                throw new AcessoNegadoException("O proprietário precisa ser da mesma horta do canteiro");
+            }
         }
 
         $data['uuid'] = Uuid::uuid1()->toString();
@@ -143,25 +153,36 @@ class CanteiroService
         $data['excluido'] = 0;
 
         $canteiro = $this->canteiroRepository->create($data);
-        
+
         return $canteiro;
     }
 
     public function update(string $uuid, array $data, array $payloadUsuarioLogado): CanteiroModel
     {
-        // TODO: Reativar verificações de permissão em produção
-        
+        $cargo = $this->getCargoSlug($payloadUsuarioLogado);
+        $this->assertCargoPodeAlterar($cargo);
+
         $canteiro = $this->canteiroRepository->findByUuid($uuid);
         if (!$canteiro || $canteiro->excluido) {
             throw new Exception('Canteiro não encontrado');
         }
-        
+        $this->assertPertencimento($cargo, $canteiro->horta, $payloadUsuarioLogado);
+
+        // Mudando de horta: a nova também precisa ser do escopo
+        if (!empty($data['horta_uuid']) && $data['horta_uuid'] !== $canteiro->horta_uuid) {
+            $novaHorta = $this->hortaService->findByUuidForValidation($data['horta_uuid']);
+            if (!$novaHorta || $novaHorta->excluido) {
+                throw new Exception("Horta não encontrada ou foi excluída");
+            }
+            $this->assertPertencimento($cargo, $novaHorta, $payloadUsuarioLogado);
+        }
+
         // Mapear campo 'nome' para 'numero_identificador' se necessário
         if (isset($data['nome']) && !isset($data['numero_identificador'])) {
             $data['numero_identificador'] = $data['nome'];
             unset($data['nome']);
         }
-        
+
         // Mapear campo 'area' para 'tamanho_m2' se necessário
         if (isset($data['area']) && !isset($data['tamanho_m2'])) {
             $data['tamanho_m2'] = $data['area'];
@@ -171,15 +192,17 @@ class CanteiroService
         $data['usuario_alterador_uuid'] = $payloadUsuarioLogado['usuario_uuid'];
         return $this->canteiroRepository->update($canteiro, $data);
     }
-    
+
     public function delete(string $uuid, array $payloadUsuarioLogado): bool
     {
-        // TODO: Reativar verificações de permissão em produção
-        
+        $cargo = $this->getCargoSlug($payloadUsuarioLogado);
+        $this->assertCargoPodeAlterar($cargo);
+
         $canteiro = $this->canteiroRepository->findByUuid($uuid);
         if (!$canteiro || $canteiro->excluido) {
             throw new Exception('Canteiro não encontrado');
         }
+        $this->assertPertencimento($cargo, $canteiro->horta, $payloadUsuarioLogado);
 
         $vinculosAtivos = $canteiro->vinculos()->where('ativo', 1)->count();
         if ($vinculosAtivos > 0) {
@@ -196,9 +219,7 @@ class CanteiroService
 
     public function getSummaryMeusCanteiros($usuarioUuid)
     {
-        $canteiros = CanteiroModel::whereHas('usuarios', function ($q) use ($usuarioUuid) {
-            $q->where('usuario_uuid', $usuarioUuid);
-        })->where('excluido', 0)->get();
+        $canteiros = $this->queryCanteirosDoUsuario($usuarioUuid)->get();
 
         $totalArea = $canteiros->sum('tamanho_m2');
         $totalCanteiros = $canteiros->count();
@@ -278,11 +299,11 @@ class CanteiroService
                     break;
 
                 case 'canteirista':
-                default:
-                    $query->whereHas('usuarios', function ($q) use ($payloadUsuarioLogado) {
-                        $q->where('usuario_uuid', $payloadUsuarioLogado['usuario_uuid']);
-                    });
+                    $query->whereIn('uuid', $this->queryCanteirosDoUsuario($payloadUsuarioLogado['usuario_uuid'])->select('uuid'));
                     break;
+
+                default:
+                    throw new AcessoNegadoException('Permissão insuficiente para consultar canteiros');
             }
         }
 
@@ -325,7 +346,7 @@ class CanteiroService
     private function assertCargoPodeAlterar(string $cargo): void
     {
         if (!in_array($cargo, ['admin_plataforma','admin_associacao_geral','admin_horta_geral'])) {
-            throw new Exception("Você não tem permissão para criar/alterar/deletar canteiros");
+            throw new AcessoNegadoException("Você não tem permissão para criar/alterar/deletar canteiros");
         }
     }
 
@@ -333,16 +354,35 @@ class CanteiroService
     {
         switch ($cargo) {
             case 'admin_associacao_geral':
-                if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Horta não pertence à sua associação");
+                if (!$horta || $horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
+                    throw new AcessoNegadoException("Este canteiro não é de uma horta da sua associação");
                 }
                 break;
 
             case 'admin_horta_geral':
-                if ($horta->uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Horta não pertence a você");
+                if (!$horta || $horta->uuid !== $payloadUsuarioLogado['horta_uuid']) {
+                    throw new AcessoNegadoException("Este canteiro não é da sua horta");
                 }
                 break;
         }
+    }
+
+    // Canteiros do usuário: vínculo em canteiros_e_usuarios ou no cadastro de canteirista (canteiristas_canteiros)
+    private function queryCanteirosDoUsuario(string $usuarioUuid)
+    {
+        return CanteiroModel::where('excluido', 0)
+            ->where(function ($q) use ($usuarioUuid) {
+                $q->whereHas('usuarios', function ($qu) use ($usuarioUuid) {
+                    $qu->where('usuario_uuid', $usuarioUuid);
+                })->orWhereIn('uuid', function ($sub) use ($usuarioUuid) {
+                    $sub->select('cc.canteiro_uuid')
+                        ->from('canteiristas_canteiros as cc')
+                        ->join('canteiristas as ct', 'ct.uuid', '=', 'cc.canteirista_uuid')
+                        ->where('ct.usuario_uuid', $usuarioUuid)
+                        ->where('ct.excluido', 0)
+                        ->where('cc.excluido', 0)
+                        ->where('cc.ativo', 1);
+                });
+            });
     }
 }

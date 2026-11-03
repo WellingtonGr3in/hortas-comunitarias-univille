@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\PermissaoDeCargoModel;
 use App\Repositories\PermissaoDeCargoRepository;
 use Respect\Validation\Validator as v;
@@ -27,7 +28,7 @@ class PermissaoDeCargoService
     {   
         if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | findAllWhere");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findAllWhere");
         } 
         return $this->permissaoDeCargoRepository->findAllWhere(['excluido' => 0]);
     }
@@ -37,11 +38,11 @@ class PermissaoDeCargoService
         if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
                         
-                throw new Exception("Permissão de cargo 0 necessária | findByUuid");
+                throw new AcessoNegadoException("Permissão de cargo 0 necessária | findByUuid");
         }  
         $permissaoDeCargo= $this->permissaoDeCargoRepository->findByUuid($uuid);
         if (!$permissaoDeCargo|| $permissaoDeCargo->excluido) {
-            throw new Exception('Permissão de cargo não encontrada');
+            throw new AcessoNegadoException('Permissão de cargo não encontrada');
         }
         return $permissaoDeCargo;
     }
@@ -49,7 +50,7 @@ class PermissaoDeCargoService
     {
         if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | findByCargoUuid");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | findByCargoUuid");
         } 
 
         $permissoesDeCargo = $this->permissaoDeCargoRepository->findByCargoUuid($cargoUuid);
@@ -64,7 +65,7 @@ class PermissaoDeCargoService
 
         if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | create");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | create");
         } 
 
         v::key('permissao_uuid', v::uuid())
@@ -94,11 +95,11 @@ class PermissaoDeCargoService
     {
         if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | update");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | update");
         }  
         $permissaoDeCargo= $this->permissaoDeCargoRepository->findByUuid($uuid);
         if (!$permissaoDeCargo|| $permissaoDeCargo->excluido) {
-            throw new Exception('Permissão de cargo não encontrada');
+            throw new AcessoNegadoException('Permissão de cargo não encontrada');
         }
 
         v::key('permissao_uuid', v::uuid(), false)
@@ -122,12 +123,12 @@ class PermissaoDeCargoService
     public function delete(string $uuid, array $payloadUsuarioLogado): bool {
         if (isset($payloadUsuarioLogado['interno']) && $payloadUsuarioLogado['interno'] === false
             && !$this->isCargoAdminPlataforma($payloadUsuarioLogado)) {
-            throw new Exception("Permissão de cargo 0 necessária | delete");
+            throw new AcessoNegadoException("Permissão de cargo 0 necessária | delete");
         } 
 
         $permissaoDeCargo = $this->permissaoDeCargoRepository->findByUuid($uuid);
         if (!$permissaoDeCargo|| $permissaoDeCargo->excluido) {
-            throw new Exception('Permissão de cargo não encontrada');
+            throw new AcessoNegadoException('Permissão de cargo não encontrada');
         }
 
         $data = [

@@ -15,13 +15,37 @@ class PagamentoRepository
             ->get();
     }
 
-    // Pagamentos de mensalidades da associação informada (escopo do admin_associacao_geral)
-    public function findAllDaAssociacao(string $associacaoUuid)
+    // Escopo do admin_associacao_geral: pagamentos de mensalidades da associação
+    // e pagamentos avulsos de canteiristas das hortas dela.
+    public function findAllDaAssociacao(string $associacaoUuid, array $hortaUuids)
     {
         return $this->queryComRelacoes()
             ->where('excluido', 0)
-            ->where('mensalidade_tipo', 'associacao')
-            ->whereHas('mensalidadeDaAssociacao', fn ($q) => $q->where('associacao_uuid', $associacaoUuid))
+            ->where(fn ($q) => $q
+                ->where(fn ($q) => $q
+                    ->where('mensalidade_tipo', 'associacao')
+                    ->whereHas('mensalidadeDaAssociacao', fn ($q) => $q->where('associacao_uuid', $associacaoUuid)))
+                ->orWhereHas('Canteirista', fn ($q) => $q->whereIn('horta_uuid', $hortaUuids)))
+            ->orderBy('data_pagamento', 'desc')
+            ->get();
+    }
+
+    // Pagamentos de canteiristas das hortas informadas.
+    public function findAllDasHortas(array $hortaUuids)
+    {
+        return $this->queryComRelacoes()
+            ->where('excluido', 0)
+            ->whereHas('Canteirista', fn ($q) => $q->whereIn('horta_uuid', $hortaUuids))
+            ->orderBy('data_pagamento', 'desc')
+            ->get();
+    }
+
+    // Pagamentos do canteirista ligado a este usuário.
+    public function findAllDoUsuario(string $usuarioUuid)
+    {
+        return $this->queryComRelacoes()
+            ->where('excluido', 0)
+            ->whereHas('Canteirista', fn ($q) => $q->where('usuario_uuid', $usuarioUuid))
             ->orderBy('data_pagamento', 'desc')
             ->get();
     }

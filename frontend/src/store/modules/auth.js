@@ -10,7 +10,8 @@ const state = {
 
 const getters = {
   isAuthenticated: state => state.isAuthenticated,
-  currentUser: state => state.user
+  currentUser: state => state.user,
+  cargoSlug: state => state.user?.cargo_slug || null
 }
 
 const mutations = {

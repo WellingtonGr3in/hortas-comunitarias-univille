@@ -21,7 +21,7 @@
           required
         >
           <option value="">Selecione o tipo</option>
-          <option value="aviso_geral">Aviso Geral</option>
+          <option v-if="podeAvisoGeral || form.tipo === 'aviso_geral'" value="aviso_geral">Aviso Geral</option>
           <option value="aviso_canteirista">Aviso para Canteirista Específico</option>
           <option value="evento_horta">Evento da Horta</option>
         </select>
@@ -183,6 +183,10 @@ export default {
     }
   },
   computed: {
+    // Aviso Geral é só do administrador da plataforma
+    podeAvisoGeral() {
+      return this.$store.getters['auth/cargoSlug'] === 'admin_plataforma'
+    },
     ...mapState('canteiristas', ['canteiristas']),
     ...mapState('hortas', ['hortas'])
   },
@@ -207,10 +211,8 @@ export default {
       try {
         this.loading = true
         const id = this.$route.params.id
-        console.log('🔍 Carregando notificação ID:', id)
         
         const response = await this.fetchNotificacaoById(id)
-        console.log('📦 Response completo:', response)
         
         // A store já retorna response.data, que contém { success, data }
         let notificacao = null
@@ -220,7 +222,6 @@ export default {
           notificacao = response
         }
         
-        console.log('✅ Notificação extraída:', notificacao)
         
         if (notificacao) {
           // Preenche o formulário
@@ -232,7 +233,6 @@ export default {
           this.form.prioridade = notificacao.prioridade || 'media'
           this.form.ativa = notificacao.ativa === 1 || notificacao.ativa === true
           
-          console.log('📝 Formulário preenchido:', this.form)
           
           // Converte datas do formato MySQL para datetime-local
           if (notificacao.data_evento) {
@@ -245,11 +245,6 @@ export default {
             this.form.data_fim = this.mysqlToDatetimeLocal(notificacao.data_fim)
           }
           
-          console.log('📅 Datas convertidas:', {
-            data_evento: this.form.data_evento,
-            data_inicio: this.form.data_inicio,
-            data_fim: this.form.data_fim
-          })
         } else {
           this.error = 'Notificação não encontrada'
         }
@@ -332,7 +327,6 @@ export default {
           data.data_evento = this.datetimeLocalToMysql(this.form.data_evento)
         }
 
-        console.log('Atualizando notificação:', data)
 
         const id = this.$route.params.id
         const result = await this.updateNotificacao({ id, data })

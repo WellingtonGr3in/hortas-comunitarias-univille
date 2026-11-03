@@ -45,8 +45,8 @@ docker network create hortas_network
 3. Subir os containers relevantes com as configurações de variáveis relevantes:
 
 ```bash
-docker run -d --name hortas_mysql --network hortas_network -e MYSQL_ROOT_PASSWORD=root_password -e MYSQL_DATABASE=railway -p 3306:3306 mysql:8.0
-docker run -d --name hortas_phpmyadmin --network hortas_network -e PMA_HOST=hortas_mysql -e PMA_PORT=3306 -e PMA_USER=root -e PMA_PASSWORD=root_password -p 8080:80 phpmyadmin/phpmyadmin
+docker run -d --name hortas_mysql --network hortas_network -e MYSQL_ROOT_PASSWORD=<escolha-uma-senha> -e MYSQL_DATABASE=railway -p 3306:3306 mysql:8.0
+docker run -d --name hortas_phpmyadmin --network hortas_network -e PMA_HOST=hortas_mysql -e PMA_PORT=3306 -e PMA_USER=root -e PMA_PASSWORD=<a-mesma-senha> -p 8080:80 phpmyadmin/phpmyadmin
 ```
 
 4. Atualizar o `.env` para este conteúdo:
@@ -60,11 +60,11 @@ APP_DEBUG=true
 DB_HOST=127.0.0.1
 DB_NAME=railway
 DB_USER=root
-DB_PASS=root_password
+DB_PASS=<a-mesma-senha>
 DB_CHARSET=utf8mb4
 
 # JWT
-JWT_SECRET=hortas_dev
+JWT_SECRET=<texto-aleatorio-com-pelo-menos-32-caracteres>
 
 # API
 API_VERSION=v1

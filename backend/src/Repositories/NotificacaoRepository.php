@@ -84,13 +84,15 @@ class NotificacaoRepository
         ]);
     }
 
-    public function marcarTodasComoLidas(string $usuarioUuid): int
+    public function marcarVariasComoLidas(array $notificacaoUuids, string $usuarioUuid): int
     {
-        return DB::connection()->affectingStatement(
-            'INSERT IGNORE INTO notificacoes_lidas (notificacao_uuid, usuario_uuid)
-             SELECT uuid, ? FROM notificacoes WHERE excluido = 0',
-            [$usuarioUuid]
-        );
+        if (empty($notificacaoUuids)) {
+            return 0;
+        }
+        return DB::table('notificacoes_lidas')->insertOrIgnore(array_map(fn($uuid) => [
+            'notificacao_uuid' => $uuid,
+            'usuario_uuid' => $usuarioUuid,
+        ], $notificacaoUuids));
     }
 }
 

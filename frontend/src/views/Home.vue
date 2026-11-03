@@ -12,95 +12,13 @@
     </div>
     
     <div class="row g-4">
-      <div class="col-md-6 col-lg-3">
+      <div v-for="card in cards" :key="card.to" class="col-md-6 col-lg-3">
         <div class="card text-center shadow-sm h-100">
           <div class="card-body">
-            <div class="fs-1 text-success mb-3">🏢</div>
-            <h5 class="card-title">Associações</h5>
-            <p class="card-text text-muted">
-              Gerencie as associações
-            </p>
-            <router-link to="/associacoes" class="btn btn-success">
-              Acessar
-            </router-link>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-6 col-lg-3">
-        <div class="card text-center shadow-sm h-100">
-          <div class="card-body">
-            <div class="fs-1 text-success mb-3">🌳</div>
-            <h5 class="card-title">Hortas</h5>
-            <p class="card-text text-muted">
-              Cadastre hortas
-            </p>
-            <router-link to="/hortas" class="btn btn-success">
-              Acessar
-            </router-link>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-6 col-lg-3">
-        <div class="card text-center shadow-sm h-100">
-          <div class="card-body">
-            <div class="fs-1 text-success mb-3">📦</div>
-            <h5 class="card-title">Canteiros</h5>
-            <p class="card-text text-muted">
-              Organize canteiros
-            </p>
-            <router-link to="/canteiros" class="btn btn-success">
-              Acessar
-            </router-link>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-6 col-lg-3">
-        <div class="card text-center shadow-sm h-100">
-          <div class="card-body">
-            <div class="fs-1 text-success mb-3">👥</div>
-            <h5 class="card-title">Canteiristas</h5>
-            <p class="card-text text-muted">
-              Gerencie responsáveis
-            </p>
-            <router-link to="/canteiristas" class="btn btn-success">
-              Acessar
-            </router-link>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-6 col-lg-3">
-        <div class="card text-center shadow-sm h-100">
-          <div class="card-body">
-            <div class="fs-1 text-success mb-3">💳</div>
-            <h5 class="card-title">Pagamentos</h5>
-            <p class="card-text text-muted">Acompanhe pagamentos e mensalidades</p>
-            <router-link to="/pagamentos" class="btn btn-success">Acessar</router-link>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-3">
-        <div class="card text-center shadow-sm h-100">
-          <div class="card-body">
-            <div class="fs-1 text-success mb-3">🧑‍🌾</div>
-            <h5 class="card-title">Dependentes</h5>
-            <p class="card-text text-muted">Gerencie dependentes dos canteiristas</p>
-            <router-link to="/dependentes" class="btn btn-success">Acessar</router-link>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-6 col-lg-3">
-        <div class="card text-center shadow-sm h-100">
-          <div class="card-body">
-            <div class="fs-1 text-success mb-3">🔔</div>
-            <h5 class="card-title">Notificações</h5>
-            <p class="card-text text-muted">Acompanhe avisos e alertas</p>
-            <router-link to="/notificacoes" class="btn btn-success">Acessar</router-link>
+            <div class="fs-1 text-success mb-3">{{ card.icone }}</div>
+            <h5 class="card-title">{{ card.titulo }}</h5>
+            <p class="card-text text-muted">{{ card.texto }}</p>
+            <router-link :to="card.to" class="btn btn-success">Acessar</router-link>
           </div>
         </div>
       </div>
@@ -109,7 +27,33 @@
 </template>
 
 <script>
+import { podeAcessar } from '@/utils/permissoes'
+
+const CARDS = [
+  { to: '/associacoes', icone: '🏢', titulo: 'Associações', texto: 'Gerencie as associações' },
+  { to: '/hortas', icone: '🌳', titulo: 'Hortas', texto: 'Cadastre hortas' },
+  { to: '/canteiros', icone: '📦', titulo: 'Canteiros', titulo_canteirista: 'Meus canteiros', texto: 'Organize canteiros', texto_canteirista: 'Veja seus canteiros' },
+  { to: '/canteiristas', icone: '👥', titulo: 'Canteiristas', texto: 'Gerencie responsáveis' },
+  { to: '/pagamentos', icone: '💳', titulo: 'Pagamentos', titulo_canteirista: 'Meus pagamentos', texto: 'Acompanhe pagamentos e mensalidades', texto_canteirista: 'Confira seus pagamentos' },
+  { to: '/dependentes', icone: '🧑‍🌾', titulo: 'Dependentes', texto: 'Gerencie dependentes dos canteiristas', texto_canteirista: 'Veja seus dependentes' },
+  { to: '/notificacoes', icone: '🔔', titulo: 'Notificações', titulo_canteirista: 'Avisos', texto: 'Acompanhe avisos e alertas' }
+]
+
 export default {
-  name: 'Home'
+  name: 'Home',
+  computed: {
+    // Cada perfil vê só os atalhos das páginas que pode abrir
+    cards() {
+      const cargo = this.$store.getters['auth/cargoSlug']
+      const canteirista = cargo === 'canteirista'
+      return CARDS
+        .filter(card => podeAcessar(this.$router.resolve(card.to), cargo))
+        .map(card => ({
+          ...card,
+          titulo: (canteirista && card.titulo_canteirista) || card.titulo,
+          texto: (canteirista && card.texto_canteirista) || card.texto
+        }))
+    }
+  }
 }
 </script>

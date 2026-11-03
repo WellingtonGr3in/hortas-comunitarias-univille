@@ -1,13 +1,22 @@
 import mensalidadesService from '@/services/mensalidades.service'
 import pagamentosService from '@/services/pagamentos.service'
 
-// Códigos de status das mensalidades da plataforma e da associação (docs/db/README.md)
+// Códigos de status das tabelas mensalidades_da_plataforma e mensalidades_da_associacao
+// (docs/db/README.md e MensalidadeDaPlataformaService::STATUS_*)
 export const STATUS = {
   AGUARDANDO: 0,
   PAGO: 1,
   COMPENSADO: 2,
   CANCELADO: 3,
   EM_ATRASO: 4
+}
+
+export const STATUS_LABEL = {
+  [STATUS.AGUARDANDO]: 'Aguardando pagamento',
+  [STATUS.PAGO]: 'Pago',
+  [STATUS.COMPENSADO]: 'Compensado',
+  [STATUS.CANCELADO]: 'Cancelado',
+  [STATUS.EM_ATRASO]: 'Em atraso'
 }
 
 // Data de hoje no fuso local, no formato YYYY-MM-DD que o backend espera
@@ -49,6 +58,9 @@ const mutations = {
     state.mensalidades = list
     state.tipo = tipo
   },
+  ADD_MENSALIDADE(state, mensalidade) {
+    state.mensalidades.unshift(mensalidade)
+  },
   SET_LOADING(state, loading) {
     state.loading = loading
   },
@@ -70,6 +82,22 @@ const actions = {
       commit('SET_ERROR', err.response?.data?.error || err.message)
     } finally {
       commit('SET_LOADING', false)
+    }
+  },
+  async createMensalidade({ commit }, data) {
+    try {
+      const res = await mensalidadesService.create({
+        ...data,
+        status: STATUS.AGUARDANDO,
+        dias_atraso: 0
+      })
+      commit('ADD_MENSALIDADE', res.data)
+      return { success: true, data: res.data }
+    } catch (err) {
+      return {
+        success: false,
+        message: err.response?.data?.error || err.response?.data?.message || 'Erro ao criar mensalidade'
+      }
     }
   },
   // Lança o pagamento e quita a mensalidade no backend (mesma transação), depois recarrega a lista

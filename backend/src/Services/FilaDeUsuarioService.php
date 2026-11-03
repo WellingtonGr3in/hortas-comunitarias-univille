@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\FilaDeUsuarioModel;
 use App\Repositories\FilaDeUsuarioRepository;
 use Respect\Validation\Validator as v;
@@ -41,7 +42,7 @@ class FilaDeUsuarioService
                 $hortas = $this->hortaService->findAllWhere([], $payloadUsuarioLogado);
                 $hortasUuids = $hortas->pluck('uuid')->toArray();
                 return $this->filaDeUsuarioRepository->findAllWhere(['excluido' => 0])
-                    ->filter(fn($fila) => in_array($fila->horta_uuid, $hortasUuids));
+                    ->filter(fn($fila) => in_array($fila->horta_uuid, $hortasUuids))->values();
 
             case 'admin_horta_geral':
                 return $this->filaDeUsuarioRepository->findAllWhere([
@@ -72,19 +73,19 @@ class FilaDeUsuarioService
             case 'admin_associacao_geral':
                 $horta = $this->hortaService->findByUuid($fila->horta_uuid, $payloadUsuarioLogado);
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta fila");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta fila");
                 }
                 return $fila;
 
             case 'admin_horta_geral':
                 if ($fila->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta fila");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta fila");
                 }
                 return $fila;
 
             default:
                 if ($fila->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta fila");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta fila");
                 }
                 return $fila;
         }
@@ -103,21 +104,21 @@ class FilaDeUsuarioService
 
             case 'admin_associacao_geral':
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar filas desta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar filas desta horta");
                 }
                 $fila = $this->filaDeUsuarioRepository->findByHortaUuid($hortaUuid);
                 break;
 
             case 'admin_horta_geral':
                 if ($hortaUuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar filas desta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar filas desta horta");
                 }
                 $fila = $this->filaDeUsuarioRepository->findByHortaUuid($hortaUuid);
                 break;
 
             default:
                 if ($hortaUuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar filas desta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar filas desta horta");
                 }
                 $fila = $this->filaDeUsuarioRepository->findByHortaUuid($hortaUuid);
         }
@@ -137,7 +138,7 @@ class FilaDeUsuarioService
         // todos os cargos só podem ver se a fila pertencer à horta correta
         $fila = $fila->filter(function($f) use ($payloadUsuarioLogado) {
             return $f->horta_uuid === $payloadUsuarioLogado['horta_uuid'];
-        });
+        })->values();
 
         if ($fila->isEmpty()) {
             throw new Exception('Usuário não encontrado na fila ou sem permissão de acesso');
@@ -150,7 +151,7 @@ class FilaDeUsuarioService
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
 
         if (!in_array($cargo, ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'])) {
-            throw new Exception("Permissão insuficiente | create");
+            throw new AcessoNegadoException("Permissão insuficiente | create");
         }
 
         v::key('usuario_uuid', v::uuid())
@@ -163,13 +164,13 @@ class FilaDeUsuarioService
         switch ($cargo) {
             case 'admin_associacao_geral':
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você só pode criar filas em hortas da sua associação");
+                    throw new AcessoNegadoException("Você só pode criar filas em hortas da sua associação");
                 }
                 break;
 
             case 'admin_horta_geral':
                 if ($data['horta_uuid'] !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você só pode criar filas na sua horta");
+                    throw new AcessoNegadoException("Você só pode criar filas na sua horta");
                 }
                 break;
         }
@@ -194,7 +195,7 @@ class FilaDeUsuarioService
     {
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
         if (!in_array($cargo, ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'])) {
-            throw new Exception("Permissão insuficiente | update");
+            throw new AcessoNegadoException("Permissão insuficiente | update");
         }
 
         $fila = $this->filaDeUsuarioRepository->findByUuid($uuid);
@@ -207,13 +208,13 @@ class FilaDeUsuarioService
         switch ($cargo) {
             case 'admin_associacao_geral':
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não pode atualizar filas de outra associação");
+                    throw new AcessoNegadoException("Você não pode atualizar filas de outra associação");
                 }
                 break;
 
             case 'admin_horta_geral':
                 if ($fila->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não pode atualizar filas de outra horta");
+                    throw new AcessoNegadoException("Você não pode atualizar filas de outra horta");
                 }
                 break;
         }
@@ -241,7 +242,7 @@ class FilaDeUsuarioService
     {
         $cargo = $this->getCargoSlug($payloadUsuarioLogado);
         if (!in_array($cargo, ['admin_plataforma', 'admin_associacao_geral', 'admin_horta_geral'])) {
-            throw new Exception("Permissão insuficiente | delete");
+            throw new AcessoNegadoException("Permissão insuficiente | delete");
         }
 
         $fila = $this->filaDeUsuarioRepository->findByUuid($uuid);
@@ -254,13 +255,13 @@ class FilaDeUsuarioService
         switch ($cargo) {
             case 'admin_associacao_geral':
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não pode deletar filas de outra associação");
+                    throw new AcessoNegadoException("Você não pode deletar filas de outra associação");
                 }
                 break;
 
             case 'admin_horta_geral':
                 if ($fila->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não pode deletar filas de outra horta");
+                    throw new AcessoNegadoException("Você não pode deletar filas de outra horta");
                 }
                 break;
         }

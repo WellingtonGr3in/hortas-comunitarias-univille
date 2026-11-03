@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Exceptions\AcessoNegadoException;
 use App\Models\CategoriaFinanceiraModel;
 use App\Repositories\CategoriaFinanceiraRepository;
 use Respect\Validation\Validator as v;
@@ -48,7 +49,7 @@ class CategoriaFinanceiraService
                 ]);
                 
             default:
-                throw new Exception("Permissão insuficiente | findAllWhere");
+                throw new AcessoNegadoException("Permissão insuficiente | findAllWhere");
         }
     }
 
@@ -67,18 +68,18 @@ class CategoriaFinanceiraService
                 
             case 'admin_associacao_geral':
                 if ($categoriaFinanceira->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta categoria");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta categoria");
                 }
                 return $categoriaFinanceira;
                 
             case 'admin_horta_geral':
                 if ($categoriaFinanceira->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar esta categoria");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar esta categoria");
                 }
                 return $categoriaFinanceira;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByUuid");
         }
     }
 
@@ -98,20 +99,20 @@ class CategoriaFinanceiraService
                 
             case 'admin_associacao_geral':
                 if ($horta->associacao_vinculada_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar categorias desta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar categorias desta horta");
                 }
                 $categoriasDaHorta = $this->categoriaFinanceiraRepository->findByHortaUuid($hortaUuid);
                 break;
                 
             case 'admin_horta_geral':
                 if ($hortaUuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar categorias desta horta");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar categorias desta horta");
                 }
                 $categoriasDaHorta = $this->categoriaFinanceiraRepository->findByHortaUuid($hortaUuid);
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByHortaUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByHortaUuid");
         }
         
         if ($categoriasDaHorta->isEmpty()) {
@@ -136,13 +137,13 @@ class CategoriaFinanceiraService
                 
             case 'admin_associacao_geral':
                 if ($associacaoUuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para acessar categorias desta associação");
+                    throw new AcessoNegadoException("Você não tem permissão para acessar categorias desta associação");
                 }
                 $categoriasDaAssociacao = $this->categoriaFinanceiraRepository->findByAssociacaoUuid($associacaoUuid);
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente | findByAssociacaoUuid");
+                throw new AcessoNegadoException("Permissão insuficiente | findByAssociacaoUuid");
         }
         
         if ($categoriasDaAssociacao->isEmpty()) {
@@ -179,27 +180,27 @@ class CategoriaFinanceiraService
             case 'admin_associacao_geral':
                 // Só pode criar para sua própria associação
                 if (!empty($data['associacao_uuid']) && $data['associacao_uuid'] !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você só pode criar categorias para sua própria associação");
+                    throw new AcessoNegadoException("Você só pode criar categorias para sua própria associação");
                 }
                 // Não pode criar para hortas
                 if (!empty($data['horta_uuid'])) {
-                    throw new Exception("Você não tem permissão para criar categorias para hortas");
+                    throw new AcessoNegadoException("Você não tem permissão para criar categorias para hortas");
                 }
                 break;
                 
             case 'admin_horta_geral':
                 // Só pode criar para sua própria horta
                 if (!empty($data['horta_uuid']) && $data['horta_uuid'] !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você só pode criar categorias para sua própria horta");
+                    throw new AcessoNegadoException("Você só pode criar categorias para sua própria horta");
                 }
                 // Não pode criar para associações
                 if (!empty($data['associacao_uuid'])) {
-                    throw new Exception("Você não tem permissão para criar categorias para associações");
+                    throw new AcessoNegadoException("Você não tem permissão para criar categorias para associações");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1,2 | create");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1,2 | create");
         }
 
         if (!empty($data['associacao_uuid'])) {
@@ -236,19 +237,19 @@ class CategoriaFinanceiraService
             case 'admin_associacao_geral':
                 // Só pode editar categorias da sua associação
                 if ($categoriaFinanceira->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para editar esta categoria");
+                    throw new AcessoNegadoException("Você não tem permissão para editar esta categoria");
                 }
                 break;
                 
             case 'admin_horta_geral':
                 // Só pode editar categorias da sua horta
                 if ($categoriaFinanceira->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para editar esta categoria");
+                    throw new AcessoNegadoException("Você não tem permissão para editar esta categoria");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1,2 | update");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1,2 | update");
         }
 
         v::key('nome', v::stringType()->notEmpty()->length(1, 100), false)
@@ -292,19 +293,19 @@ class CategoriaFinanceiraService
             case 'admin_associacao_geral':
                 // Só pode deletar categorias da sua associação
                 if ($categoriaFinanceira->associacao_uuid !== $payloadUsuarioLogado['associacao_uuid']) {
-                    throw new Exception("Você não tem permissão para deletar esta categoria");
+                    throw new AcessoNegadoException("Você não tem permissão para deletar esta categoria");
                 }
                 break;
                 
             case 'admin_horta_geral':
                 // Só pode deletar categorias da sua horta
                 if ($categoriaFinanceira->horta_uuid !== $payloadUsuarioLogado['horta_uuid']) {
-                    throw new Exception("Você não tem permissão para deletar esta categoria");
+                    throw new AcessoNegadoException("Você não tem permissão para deletar esta categoria");
                 }
                 break;
                 
             default:
-                throw new Exception("Permissão insuficiente 0,1,2 | delete");
+                throw new AcessoNegadoException("Permissão insuficiente 0,1,2 | delete");
         }
 
         $data = [

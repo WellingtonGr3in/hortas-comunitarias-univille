@@ -113,12 +113,10 @@ export default {
 
     onMounted(async () => {
       const id = route.params.id
-      console.log('Carregando horta ID:', id)
       
       await store.dispatch('hortas/fetchHorta', id)
 
       const horta = store.state.hortas.currentHorta
-      console.log('Horta carregada:', horta)
       
       if (horta) {
         // Copiar apenas os campos do formulário
@@ -127,7 +125,6 @@ export default {
         form.telefone = horta.telefone || ''
         form.responsavel = horta.responsavel || ''
         
-        console.log('Formulário preenchido:', form)
       }
     })
     
@@ -202,10 +199,6 @@ export default {
       loading.value = true
       errorMessage.value = ''
       
-      console.log('Enviando dados para atualização:', {
-        id: route.params.id,
-        data: form
-      })
       
       const result = await store.dispatch('hortas/updateHorta', {
         id: route.params.id,
@@ -213,7 +206,6 @@ export default {
       })
       loading.value = false
 
-      console.log('Resultado do update:', result)
 
       if (result.success) {
         // Recarregar a lista de hortas antes de redirecionar

@@ -24,7 +24,7 @@
         <span v-if="dependente.ativo" class="badge rounded-pill bg-dark text-white">Ativo</span>
         <span v-else class="badge rounded-pill bg-light text-dark">Inativo</span>
 
-        <button class="btn btn-sm btn-outline-secondary" @click="$emit('edit', dependente)">Editar</button>
+        <button v-if="podeEditar" class="btn btn-sm btn-outline-secondary" @click="$emit('edit', dependente)">Editar</button>
       </div>
     </div>
   </div>
@@ -33,7 +33,10 @@
 <script>
 export default {
   name: 'DependenteItem',
-  props: { dependente: { type: Object, required: true } },
+  props: {
+    dependente: { type: Object, required: true },
+    podeEditar: { type: Boolean, default: true }
+  },
   computed: {
     initials() {
       const name = (this.dependente.nome || '').trim()
