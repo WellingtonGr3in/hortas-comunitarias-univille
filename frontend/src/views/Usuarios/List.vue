@@ -163,7 +163,7 @@ import FormInput from '@/components/FormInput.vue'
 import api from '@/services/api'
 import associacoesService from '@/services/associacoes.service'
 import hortasService from '@/services/hortas.service'
-import { formatarCpf } from '@/utils/format'
+import { cpfCorresponde, formatarCpf } from '@/utils/format'
 
 export default {
   name: 'UsuariosList',
@@ -214,11 +214,10 @@ export default {
 
     const listaFiltrada = computed(() => {
       const termo = normalizar(busca.value)
-      const cpfBusca = /^[\d.\-\s]+$/.test(termo) ? termo.replace(/\D/g, '') : ''
       return usuarios.value.filter(usuario => {
-        const correspondeBusca = !termo || [usuario.nome_completo, usuario.apelido, usuario.email, usuario.cpf]
+        const correspondeBusca = !termo || [usuario.nome_completo, usuario.apelido, usuario.email]
           .some(value => normalizar(value).includes(termo)) ||
-          (cpfBusca && String(usuario.cpf ?? '').replace(/\D/g, '').includes(cpfBusca))
+          cpfCorresponde(usuario.cpf, termo)
         return correspondeBusca && Object.entries(filtros)
           .every(([tipo, uuid]) => !uuid || uuidVinculo(usuario, tipo) === uuid)
       })

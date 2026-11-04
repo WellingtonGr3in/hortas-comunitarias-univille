@@ -6,6 +6,7 @@ use App\Services\HortaService;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use App\Services\CanteiristaService;
+use App\Utils\Privacidade\PoliticaDeDadosSensiveis;
 
 class CanteiristaController
 {
@@ -33,7 +34,7 @@ class CanteiristaController
         // Formatar resposta
         $CanteiristasFormatados = [];
         foreach ($Canteiristas as $Canteirista) {
-            $CanteiristasFormatados[] = $this->formatCanteirista($Canteirista);
+            $CanteiristasFormatados[] = $this->formatCanteirista($Canteirista, $request, false);
         }
         
         $response->getBody()->write(json_encode($CanteiristasFormatados));
@@ -58,7 +59,7 @@ class CanteiristaController
         
         $Canteirista->load(['canteiros', 'usuario']);
 
-        $CanteiristaFormatado = $this->formatCanteirista($Canteirista);
+        $CanteiristaFormatado = $this->formatCanteirista($Canteirista, $request, true);
 
         $response->getBody()->write(json_encode($CanteiristaFormatado));
         return $response->withStatus(200);
@@ -78,7 +79,7 @@ class CanteiristaController
         $Canteirista = $this->CanteiristaService->create($data, $payloadUsuarioLogado);
         $Canteirista->load(['canteiros', 'usuario']);
 
-        $CanteiristaFormatado = $this->formatCanteirista($Canteirista);
+        $CanteiristaFormatado = $this->formatCanteirista($Canteirista, $request, true);
 
         $response->getBody()->write(json_encode($CanteiristaFormatado));
         return $response->withStatus(201);
@@ -103,14 +104,17 @@ class CanteiristaController
         }
 
         $Canteirista->load(['canteiros', 'usuario']);
-        $CanteiristaFormatado = $this->formatCanteirista($Canteirista);
+        $CanteiristaFormatado = $this->formatCanteirista($Canteirista, $request, true);
 
         $response->getBody()->write(json_encode($CanteiristaFormatado));
         return $response->withStatus(200);
     }
 
-    private function formatCanteirista($Canteirista): array
+    private function formatCanteirista($Canteirista, Request $request, bool $detalhe): array
     {
+        $politica = PoliticaDeDadosSensiveis::daRequisicao($request);
+        $titular = $Canteirista->usuario_uuid;
+
         return [
             'id' => $Canteirista->uuid,
             'nome' => $Canteirista->usuario->nome_completo ?? '',
@@ -120,11 +124,11 @@ class CanteiristaController
             'usuario' => [
                 'uuid' => $Canteirista->usuario->uuid ?? null,
                 'nome_completo' => $Canteirista->usuario->nome_completo ?? null,
-                'cpf' => $Canteirista->usuario->cpf ?? null,
+                'cpf' => $politica->cpf($Canteirista->usuario->cpf ?? null, $titular, $detalhe),
                 'email' => $Canteirista->usuario->email ?? null,
-                'endereco_uuid' => $Canteirista->usuario->endereco_uuid ?? null,
+                'endereco_uuid' => $politica->dadoPessoal($Canteirista->usuario->endereco_uuid ?? null, $titular, $detalhe),
                 'apelido' => $Canteirista->usuario->apelido ?? null,
-                'data_de_nascimento' => $Canteirista->usuario->data_de_nascimento ?? null,
+                'data_de_nascimento' => $politica->dadoPessoal($Canteirista->usuario->data_de_nascimento ?? null, $titular, $detalhe),
             ],
             'horta_vinculada' => $Canteirista->horta_uuid,
             'canteiros' => $Canteirista->canteiros->map(function ($canteiro) {
@@ -188,7 +192,7 @@ class CanteiristaController
 
         $CanteiristasFormatados = [];
         foreach ($Canteiristas as $Canteirista) {
-            $CanteiristasFormatados[] = $this->formatCanteirista($Canteirista);
+            $CanteiristasFormatados[] = $this->formatCanteirista($Canteirista, $request, false);
         }
 
         $response->getBody()->write(json_encode([
@@ -249,7 +253,7 @@ class CanteiristaController
         $canteirista->load(['canteiros', 'usuario']);
         $response->getBody()->write(json_encode([
             'message' => 'Canteirista ativado com sucesso',
-            'data' => $this->formatCanteirista($canteirista),
+            'data' => $this->formatCanteirista($canteirista, $request, true),
         ]));
         return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
     }
@@ -282,7 +286,7 @@ class CanteiristaController
         $canteirista->load(['canteiros', 'usuario']);
         $response->getBody()->write(json_encode([
             'message' => 'Canteirista desativado com sucesso',
-            'data' => $this->formatCanteirista($canteirista),
+            'data' => $this->formatCanteirista($canteirista, $request, true),
         ]));
         return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
     }

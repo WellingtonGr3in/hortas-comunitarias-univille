@@ -365,6 +365,11 @@ class CanteiristaService
             $filtros['hortas_uuid'] = $hortas;
         }
 
+        // Pesquisar por pedaços revelaria o CPF que a resposta mascara para este cargo
+        if ($this->getCargoSlug($payloadUsuarioLogado) === 'admin_plataforma') {
+            unset($filtros['cpf']);
+        }
+
         return $this->CanteiristaRepository->findByFilters($filtros);
     }
 

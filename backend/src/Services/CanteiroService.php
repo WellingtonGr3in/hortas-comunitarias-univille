@@ -310,15 +310,19 @@ class CanteiroService
         // Search by number, horta name, canteirista name, CPF, localizacao
         if (!empty($params['search'])) {
             $search = '%' . trim($params['search']) . '%';
-            $query->where(function ($q) use ($search) {
+            // Pesquisar por pedaços revelaria o CPF para quem só o recebe mascarado
+            $podeBuscarPorCpf = in_array($cargo ?? null, ['admin_associacao_geral', 'admin_horta_geral'], true);
+            $query->where(function ($q) use ($search, $podeBuscarPorCpf) {
                 $q->where('numero_identificador', 'like', $search)
                   ->orWhere('localizacao', 'like', $search)
                   ->orWhereHas('horta', function ($qh) use ($search) {
                       $qh->where('nome_da_horta', 'like', $search);
                   })
-                  ->orWhereHas('usuarios', function ($qu) use ($search) {
-                      $qu->where('nome_completo', 'like', $search)
-                        ->orWhere('cpf', 'like', $search);
+                  ->orWhereHas('usuarios', function ($qu) use ($search, $podeBuscarPorCpf) {
+                      $qu->where('nome_completo', 'like', $search);
+                      if ($podeBuscarPorCpf) {
+                          $qu->orWhere('cpf', 'like', $search);
+                      }
                   });
             });
         }

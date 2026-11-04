@@ -5,6 +5,7 @@ namespace App\Controllers;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use App\Services\DependenteService;
+use App\Utils\Privacidade\PoliticaDeDadosSensiveis;
 
 class DependenteController
 {
@@ -29,14 +30,7 @@ class DependenteController
         // Formatar resposta
         $dependentesFormatados = [];
         foreach ($dependentes as $dependente) {
-            $dependentesFormatados[] = [
-                'id' => $dependente->uuid,
-                'nome' => $dependente->nome,
-                'cpf' => $dependente->cpf,
-                'idade' => $dependente->idade,
-                'ativo' => $dependente->ativo,
-                'carteirista_uuid' => $dependente->carteirista_uuid,
-            ];
+            $dependentesFormatados[] = $this->formatDependente($dependente, $request, false);
         }
         
         $response->getBody()->write(json_encode($dependentesFormatados));
@@ -59,14 +53,7 @@ class DependenteController
             return $response->withStatus(404);
         }
 
-        $dependenteFormatado = [
-            'id' => $dependente->uuid,
-            'nome' => $dependente->nome,
-            'cpf' => $dependente->cpf,
-            'idade' => $dependente->idade,
-            'ativo' => $dependente->ativo,
-            'carteirista_uuid' => $dependente->carteirista_uuid,
-        ];
+        $dependenteFormatado = $this->formatDependente($dependente, $request, true);
 
         $response->getBody()->write(json_encode($dependenteFormatado));
         return $response->withStatus(200);
@@ -85,14 +72,7 @@ class DependenteController
         
         $dependente = $this->dependenteService->create($data, $payloadUsuarioLogado);
 
-        $dependenteFormatado = [
-            'id' => $dependente->uuid,
-            'nome' => $dependente->nome,
-            'cpf' => $dependente->cpf,
-            'idade' => $dependente->idade,
-            'ativo' => $dependente->ativo,
-            'carteirista_uuid' => $dependente->carteirista_uuid,
-        ];
+        $dependenteFormatado = $this->formatDependente($dependente, $request, true);
 
         $response->getBody()->write(json_encode($dependenteFormatado));
         return $response->withStatus(201);
@@ -116,17 +96,26 @@ class DependenteController
             return $response->withStatus(404);
         }
 
-        $dependenteFormatado = [
+        $dependenteFormatado = $this->formatDependente($dependente, $request, true);
+
+        $response->getBody()->write(json_encode($dependenteFormatado));
+        return $response->withStatus(200);
+    }
+
+    // O titular do dependente é o canteirista responsável por ele
+    private function formatDependente($dependente, Request $request, bool $detalhe): array
+    {
+        $politica = PoliticaDeDadosSensiveis::daRequisicao($request);
+        $podeVerCpf = $detalhe && $politica->podeVerRegistroCompleto($dependente->Canteirista?->usuario_uuid);
+
+        return [
             'id' => $dependente->uuid,
             'nome' => $dependente->nome,
-            'cpf' => $dependente->cpf,
+            'cpf' => $podeVerCpf ? $dependente->cpf : PoliticaDeDadosSensiveis::mascararCpf($dependente->cpf),
             'idade' => $dependente->idade,
             'ativo' => $dependente->ativo,
             'carteirista_uuid' => $dependente->carteirista_uuid,
         ];
-
-        $response->getBody()->write(json_encode($dependenteFormatado));
-        return $response->withStatus(200);
     }
 
     public function delete(Request $request, Response $response, array $args)
