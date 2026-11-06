@@ -41,13 +41,14 @@ const mutations = {
 
 function mensagemErro(error, fallback) {
   const body = error.response?.data
-  const details = body?.details
-  if (details && typeof details === 'object') {
-    const message = Object.values(details).flat().filter(value => typeof value === 'string').join('; ')
-    if (message) return message
+  const details = body?.details && typeof body.details === 'object' ? body.details : null
+  const detailsMessage = details
+    ? Object.values(details).flat().filter(value => typeof value === 'string').join('; ')
+    : ''
+  return {
+    message: detailsMessage || body?.error || fallback,
+    details
   }
-  return [body?.detail, body?.message, body?.error, error.message]
-    .find(value => typeof value === 'string' && value.trim()) || fallback
 }
 
 async function executar({ commit }, operacao, sucesso, falha) {
@@ -57,9 +58,9 @@ async function executar({ commit }, operacao, sucesso, falha) {
     const data = await operacao()
     return { success: true, message: sucesso, data }
   } catch (error) {
-    const message = mensagemErro(error, falha)
+    const { message, details } = mensagemErro(error, falha)
     commit('SET_ERROR', message)
-    return { success: false, message }
+    return { success: false, message, details }
   } finally {
     commit('SET_LOADING', false)
   }
