@@ -32,6 +32,16 @@ Em **Notificações**, os avisos que você ainda não leu aparecem com um ponto 
 | Administrador de horta | Cuida dos canteiros, canteiristas, dependentes e do financeiro da horta |
 | Canteirista | Consulta seus pagamentos, sua associação, seus canteiros e seus dependentes |
 
+**Dados pessoais protegidos.** O sistema só mostra o CPF e a data de nascimento de alguém a quem precisa deles:
+
+| Quem está vendo | Em listas | Ao abrir um registro |
+| --- | --- | --- |
+| A própria pessoa | Tudo | Tudo |
+| Administrador de horta ou de associação (só pessoas da sua parte) | CPF parcial (`***.456.789-**`), sem data de nascimento | CPF e data de nascimento completos |
+| Administrador da plataforma | CPF parcial, sem data de nascimento | CPF parcial, sem data de nascimento |
+
+O CPF de um dependente segue a mesma regra: quem o vê completo é o canteirista responsável por ele e a administração da horta ou da associação, ao abrir o registro. Procurar por CPF nas listas compara só a parte visível.
+
 ## Administrador da plataforma
 
 Você cuida do sistema como um todo: quais associações usam a plataforma e se a mensalidade da plataforma está em dia.

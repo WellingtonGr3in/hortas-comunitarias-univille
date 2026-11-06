@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Services\UsuarioService;
+use App\Utils\Privacidade\PoliticaDeDadosSensiveis;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -25,7 +26,8 @@ class UsuarioController
         ];
 
         $usuarios = $this->usuarioService->findAllWhere($payloadUsuarioLogado);
-        $response->getBody()->write(json_encode($usuarios));
+        $politica = PoliticaDeDadosSensiveis::daRequisicao($request);
+        $response->getBody()->write(json_encode($usuarios->map(fn($usuario) => $politica->usuario($usuario, false))));
         return $response->withStatus(200);
     }
 
@@ -41,7 +43,7 @@ class UsuarioController
         $usuario = $this->usuarioService->findByUuid($args['uuid'], $payloadUsuarioLogado);
         if (!$usuario) return $response->withStatus(404);
 
-        $response->getBody()->write(json_encode($usuario));
+        $response->getBody()->write(json_encode(PoliticaDeDadosSensiveis::daRequisicao($request)->usuario($usuario, true)));
         return $response->withStatus(200);
     }
 
@@ -58,7 +60,7 @@ class UsuarioController
         $uuidUsuarioLogado = $request->getAttribute('usuario_uuid');
         $usuario = $this->usuarioService->create($data, $uuidUsuarioLogado, $payloadUsuarioLogado);
 
-        $response->getBody()->write(json_encode($usuario));
+        $response->getBody()->write(json_encode(PoliticaDeDadosSensiveis::daRequisicao($request)->usuario($usuario, true)));
         return $response->withStatus(201);
     }
 
@@ -75,7 +77,7 @@ class UsuarioController
         $uuidUsuarioLogado = $request->getAttribute('usuario_uuid');
         $usuario = $this->usuarioService->update($args['uuid'], $data, $uuidUsuarioLogado, $payloadUsuarioLogado);
 
-        $response->getBody()->write(json_encode($usuario));
+        $response->getBody()->write(json_encode(PoliticaDeDadosSensiveis::daRequisicao($request)->usuario($usuario, true)));
         return $response->withStatus(200);
     }
 

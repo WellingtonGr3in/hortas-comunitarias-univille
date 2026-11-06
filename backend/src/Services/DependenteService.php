@@ -6,6 +6,7 @@ use App\Exceptions\AcessoNegadoException;
 use App\Repositories\CanteiristaRepository;
 use App\Repositories\DependenteRepository;
 use App\Repositories\HortaRepository;
+use App\Utils\Privacidade\PoliticaDeDadosSensiveis;
 
 /**
  * Quem pode o quê:
@@ -109,6 +110,11 @@ class DependenteService
 
         // Adiciona o UUID do usuário alterador
         $data['usuario_alterador_uuid'] = $payloadUsuarioLogado['usuario_uuid'];
+
+        // Quem só recebe o CPF mascarado não pode gravar a máscara por cima do valor real
+        if (PoliticaDeDadosSensiveis::cpfEstaMascarado($data['cpf'] ?? null)) {
+            unset($data['cpf']);
+        }
 
         // Remove campos que não devem ser atualizados
         unset($data['uuid']);

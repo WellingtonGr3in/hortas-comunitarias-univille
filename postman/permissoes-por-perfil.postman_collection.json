@@ -3480,6 +3480,661 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "7. Dados sensíveis",
+			"item": [
+				{
+					"name": "horta: lista de usuários mascara CPF de terceiros",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const me = JSON.parse(atob(pm.collectionVariables.get('token_horta_A').split('.')[1])).usuario_uuid;",
+									"const outros = pm.response.json().filter(u => u.uuid !== me);",
+									"pm.test('Há outros usuários', () => pm.expect(outros.length).to.be.above(0));",
+									"pm.test('CPF mascarado', () => outros.forEach(u => pm.expect(u.cpf).to.match(/^\\*\\*\\*\\.\\d{3}\\.\\d{3}-\\*\\*$/)));",
+									"pm.test('Sem dados internos', () => outros.forEach(u => ['data_de_nascimento', 'motivo_bloqueio_acesso', 'taxa_associado_em_centavos', 'endereco_uuid', 'senha'].forEach(c => pm.expect(u).to.not.have.property(c))));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios"
+							]
+						}
+					}
+				},
+				{
+					"name": "horta: lista de canteiristas mascara CPF e omite nascimento",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const itens = pm.response.json();",
+									"pm.test('Lista não está vazia', () => pm.expect(itens.length).to.be.above(0));",
+									"pm.test('Nenhum CPF completo', () => itens.forEach(i => pm.expect(String(i.usuario.cpf)).to.match(/^\\*\\*\\*\\.\\d{3}\\.\\d{3}-\\*\\*$/)));",
+									"pm.test('Sem nascimento', () => itens.forEach(i => pm.expect(i.usuario.data_de_nascimento).to.equal(null)));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas"
+							]
+						}
+					}
+				},
+				{
+					"name": "horta: filtro de canteiristas também mascara",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const itens = pm.response.json().data;",
+									"pm.test('Lista não está vazia', () => pm.expect(itens.length).to.be.above(0));",
+									"pm.test('Nenhum CPF completo', () => itens.forEach(i => pm.expect(String(i.usuario.cpf)).to.match(/^\\*\\*\\*\\.\\d{3}\\.\\d{3}-\\*\\*$/)));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas/filtro",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas",
+								"filtro"
+							]
+						}
+					}
+				},
+				{
+					"name": "horta: abrir canteirista mostra dados completos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const c = pm.response.json();",
+									"pm.test('CPF completo', () => pm.expect(c.usuario.cpf).to.match(/^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$/));",
+									"pm.test('Com nascimento', () => pm.expect(c.usuario.data_de_nascimento).to.be.a('string'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas/{{cant_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas",
+								"{{cant_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "horta: lista de dependentes mascara",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const itens = pm.response.json();",
+									"pm.test('Lista não está vazia', () => pm.expect(itens.length).to.be.above(0));",
+									"pm.test('Nenhum CPF completo', () => itens.forEach(i => pm.expect(String(i.cpf)).to.match(/^\\*\\*\\*\\.\\d{3}\\.\\d{3}-\\*\\*$/)));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes"
+							]
+						}
+					}
+				},
+				{
+					"name": "horta: abrir dependente mostra CPF completo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('CPF completo', () => pm.expect(pm.response.json().cpf).to.match(/^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$/));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes/{{dep_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes",
+								"{{dep_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "horta: abrir canteiro não expõe CPF no histórico",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Sem usuario_cpf', () => (pm.response.json().historico || []).forEach(h => pm.expect(h).to.not.have.property('usuario_cpf')));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiros/{{canteiro_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiros",
+								"{{canteiro_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "plataforma: abrir usuário de terceiro continua mascarado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const u = pm.response.json();",
+									"pm.test('CPF mascarado', () => pm.expect(u.cpf).to.match(/^\\*\\*\\*\\.\\d{3}\\.\\d{3}-\\*\\*$/));",
+									"pm.test('Sem nascimento', () => pm.expect(u).to.not.have.property('data_de_nascimento'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios/{{usuario_canteirista_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios",
+								"{{usuario_canteirista_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "plataforma: abrir canteirista continua mascarado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const c = pm.response.json();",
+									"pm.test('CPF mascarado', () => pm.expect(c.usuario.cpf).to.match(/^\\*\\*\\*\\.\\d{3}\\.\\d{3}-\\*\\*$/));",
+									"pm.test('Sem nascimento', () => pm.expect(c.usuario.data_de_nascimento).to.equal(null));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas/{{cant_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas",
+								"{{cant_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "plataforma: abrir dependente continua mascarado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('CPF mascarado', () => pm.expect(pm.response.json().cpf).to.match(/^\\*\\*\\*\\.\\d{3}\\.\\d{3}-\\*\\*$/));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes/{{dep_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes",
+								"{{dep_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "plataforma: filtro por CPF é ignorado (não vira oráculo)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Filtro não restringiu o resultado', () => pm.expect(pm.response.json().total).to.be.above(0));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas/filtro?cpf=cpf-que-nao-existe",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas",
+								"filtro"
+							],
+							"query": [
+								{
+									"key": "cpf",
+									"value": "cpf-que-nao-existe"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "plataforma: gravar a máscara não apaga o CPF real",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_plat}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes/{{dep_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes",
+								"{{dep_A}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"cpf\": \"***.111.222-**\"}"
+						}
+					}
+				},
+				{
+					"name": "horta: CPF do dependente segue intacto após a tentativa",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('CPF continua completo', () => pm.expect(pm.response.json().cpf).to.match(/^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$/));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_horta_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes/{{dep_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes",
+								"{{dep_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "canteirista: vê o próprio CPF completo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const u = pm.response.json();",
+									"pm.test('CPF completo', () => pm.expect(u.cpf).to.match(/^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$/));",
+									"pm.test('Com nascimento', () => pm.expect(u.data_de_nascimento).to.be.a('string'));",
+									"pm.test('Senha nunca sai', () => pm.expect(u).to.not.have.property('senha'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/usuarios/{{usuario_canteirista_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"usuarios",
+								"{{usuario_canteirista_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "canteirista: vê o próprio CPF completo no cadastro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('CPF completo', () => pm.expect(pm.response.json().usuario.cpf).to.match(/^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$/));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/canteiristas/{{cant_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"canteiristas",
+								"{{cant_A}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "canteirista: abrir o próprio dependente mostra CPF completo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('CPF completo', () => pm.expect(pm.response.json().cpf).to.match(/^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$/));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_cant_A}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/dependentes/{{dep_A}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"dependentes",
+								"{{dep_A}}"
+							]
+						}
+					}
+				}
+			]
 		}
 	],
 	"variable": [

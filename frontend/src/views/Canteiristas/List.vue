@@ -305,7 +305,8 @@
               </div>
               <div class="col-6">
                 <p class="text-muted small mb-1">Data de Nascimento</p>
-                <p class="mb-0 fw-semibold">{{ formatarData(itemSelecionado.usuario?.data_de_nascimento) }}</p>
+                <p v-if="itemSelecionado.usuario?.data_de_nascimento" class="mb-0 fw-semibold">{{ formatarData(itemSelecionado.usuario.data_de_nascimento) }}</p>
+                <p v-else class="mb-0 text-muted"><i class="fas fa-lock me-1" aria-hidden="true"></i>Restrito à gestão</p>
               </div>
               <div class="col-12">
                 <p class="text-muted small mb-1">Horta Vinculada</p>
@@ -364,7 +365,7 @@
                 <input v-model="formEditar.email" type="text" class="form-control" :class="{'is-invalid':errosEditar.email}" autocomplete="off" />
                 <div v-if="errosEditar.email" class="invalid-feedback">{{ errosEditar.email }}</div>
               </div>
-              <div class="col-12">
+              <div v-if="podeEditarNascimento" class="col-12">
                 <label class="form-label small fw-semibold">Data de Nascimento</label>
                 <input v-model="formEditar.data_de_nascimento" type="date" class="form-control" />
               </div>
@@ -443,7 +444,8 @@ import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import hortasService from '@/services/hortas.service'
 import canteirosService from '@/services/canteiros.service'
-import { formatarCpf } from '@/utils/format'
+import { cpfCorresponde, formatarCpf } from '@/utils/format'
+import canteiristasService from '@/services/canteiristas.service'
 
 export default {
   name: 'CanteiristasList',
@@ -505,7 +507,7 @@ export default {
       return canteiristas.value.filter(c => {
         const nomeMatch = !termo ||
           c.usuario?.nome_completo?.toLowerCase().includes(termo) ||
-          c.usuario?.cpf?.includes(termo) ||
+          cpfCorresponde(c.usuario?.cpf, termo) ||
           c.usuario?.email?.toLowerCase().includes(termo)
         const statusMatch = filtroStatus.value === '' || String(c.ativo ? 1 : 0) === filtroStatus.value
         const hortaMatch = !filtroHorta.value || c.horta_vinculada === filtroHorta.value
@@ -568,6 +570,8 @@ export default {
 
     // ---- CRUD handlers ----
 
+    const podeEditarNascimento = ref(false)
+
     const abrirModalCriar = () => {
       form.value = formInicial()
       erros.value = {}
@@ -576,12 +580,24 @@ export default {
       modalCriar.value = true
     }
 
-    const abrirModalVer = (item) => {
-      itemSelecionado.value = item
-      modalVer.value = true
+    // A lista traz os dados pessoais protegidos; o registro aberto traz o que o perfil pode ver
+    const carregarDetalhe = async (item) => {
+      try {
+        return (await canteiristasService.getById(item.id)).data
+      } catch {
+        return item
+      }
     }
 
-    const abrirModalEditar = async (item) => {
+    const abrirModalVer = async (item) => {
+      itemSelecionado.value = item
+      modalVer.value = true
+      const detalhe = await carregarDetalhe(item)
+      if (itemSelecionado.value?.id === item.id) itemSelecionado.value = detalhe
+    }
+
+    const abrirModalEditar = async (itemDaLista) => {
+      const item = await carregarDetalhe(itemDaLista)
       itemSelecionado.value = item
       errosEditar.value = {}
       erroModal.value = ''
@@ -595,6 +611,7 @@ export default {
         ativo: item.ativo,
         canteiros_uuids: item.canteiros?.map(c => c.uuid) || [],
       }
+      podeEditarNascimento.value = !!formEditar.value.data_de_nascimento
       canteirosEditar.value = []
       if (item.horta_vinculada) {
         await carregarCanteiros(item.horta_vinculada, 'editar')
@@ -659,7 +676,7 @@ export default {
           apelido: formEditar.value.apelido,
           email: formEditar.value.email,
           telefone: formEditar.value.telefone,
-          data_de_nascimento: formEditar.value.data_de_nascimento,
+          ...(podeEditarNascimento.value ? { data_de_nascimento: formEditar.value.data_de_nascimento } : {}),
           horta_uuid: formEditar.value.horta_uuid,
           ativo: formEditar.value.ativo ? 1 : 0,
           canteiros: formEditar.value.canteiros_uuids,
@@ -699,7 +716,7 @@ export default {
       modalCriar, modalVer, modalEditar, modalExcluir,
       itemSelecionado, salvando, erroModal, erros, errosEditar,
       form, formEditar,
-      abrirModalCriar, abrirModalVer, abrirModalEditar, abrirModalExcluir,
+      abrirModalCriar, abrirModalVer, abrirModalEditar, abrirModalExcluir, podeEditarNascimento,
       carregarCanteiros, mascaraCpf, mascaraTelefone, mascaraTelefoneEditar,
       cadastrar, salvarEdicao, confirmarExcluir,
     }

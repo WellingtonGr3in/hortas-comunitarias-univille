@@ -42,8 +42,12 @@
                   placeholder="000.000.000-00"
                   @input="formatCPF"
                   maxlength="14"
+                  :readonly="cpfProtegido"
                   required
                 />
+                <div v-if="cpfProtegido" class="form-text">
+                  <i class="fas fa-lock me-1" aria-hidden="true"></i>CPF protegido: visível por completo só para a gestão da horta ou da associação.
+                </div>
                 <div v-if="errors.cpf" class="invalid-feedback">
                   {{ errors.cpf }}
                 </div>
@@ -117,6 +121,7 @@
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
+import { cpfEstaMascarado } from '@/utils/format'
 
 export default {
   name: 'DependentesEdit',
@@ -144,6 +149,7 @@ export default {
     
     const loading = ref(false)
     const loaded = ref(false)
+    const cpfProtegido = ref(false)
     const errorMessage = ref('')
     
     const validateForm = () => {
@@ -161,7 +167,9 @@ export default {
         isValid = false
       }
       
-      if (!form.cpf || form.cpf.trim() === '') {
+      if (cpfProtegido.value) {
+        // Campo somente leitura: nada a validar
+      } else if (!form.cpf || form.cpf.trim() === '') {
         errors.cpf = 'CPF é obrigatório'
         isValid = false
       } else {
@@ -189,6 +197,7 @@ export default {
     }
     
     const formatCPF = (event) => {
+      if (cpfProtegido.value) return
       let value = event.target.value.replace(/\D/g, '').substring(0, 11)
       if (value.length > 0) {
         if (value.length <= 3) {
@@ -214,12 +223,13 @@ export default {
       if (resp) {
         form.nome = resp.nome || ''
         form.cpf = resp.cpf || ''
+        cpfProtegido.value = cpfEstaMascarado(form.cpf)
         form.idade = resp.idade || null
         form.carteirista_uuid = resp.carteirista_uuid || ''
         form.ativo = resp.ativo !== undefined ? resp.ativo : true
         
         // Format CPF if it exists
-        if (form.cpf) {
+        if (form.cpf && !cpfProtegido.value) {
           const cpfNumbers = form.cpf.replace(/\D/g, '').substring(0, 11)
           if (cpfNumbers.length > 0) {
             if (cpfNumbers.length <= 3) {
@@ -246,7 +256,9 @@ export default {
       
       loading.value = true
       const id = route.params.id
-      const res = await store.dispatch('dependentes/updateDependente', { id, data: form })
+      const dados = { ...form }
+      if (cpfProtegido.value) delete dados.cpf
+      const res = await store.dispatch('dependentes/updateDependente', { id, data: dados })
       loading.value = false
       
       if (res && res.success === false) {
@@ -258,6 +270,7 @@ export default {
     
     return {
       form,
+      cpfProtegido,
       errors,
       loading,
       loaded,

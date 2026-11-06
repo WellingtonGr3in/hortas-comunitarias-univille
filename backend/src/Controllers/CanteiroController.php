@@ -6,6 +6,7 @@ use App\Exceptions\AcessoNegadoException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use App\Services\CanteiroService;
+use App\Utils\Privacidade\PoliticaDeDadosSensiveis;
 
 class CanteiroController
 {
@@ -72,7 +73,6 @@ class CanteiroController
                         'uuid' => $vinculo->uuid,
                         'usuario_uuid' => $vinculo->usuario_uuid,
                         'usuario_nome' => $vinculo->usuario->nome_completo ?? '—',
-                        'usuario_cpf' => $vinculo->usuario->cpf ?? '—',
                         'tipo_vinculo' => $vinculo->tipo_vinculo,
                         'data_inicio' => $vinculo->data_inicio,
                         'data_fim' => $vinculo->data_fim,
@@ -262,7 +262,8 @@ class CanteiroController
         $canteiros = $this->canteiroService->findAllWhereEnhanced($params, $payloadUsuarioLogado);
         
         // Formatar resposta para o frontend
-        $canteirosFormatados = $canteiros->map(function($canteiro) {
+        $politica = PoliticaDeDadosSensiveis::daRequisicao($request);
+        $canteirosFormatados = $canteiros->map(function($canteiro) use ($politica) {
             $usuario = $canteiro->usuarios->first();
             return [
                 'id' => $canteiro->uuid,
@@ -275,7 +276,7 @@ class CanteiroController
                 'horta_nome' => $canteiro->horta->nome_da_horta ?? '—',
                 'horta_uuid' => $canteiro->horta_uuid,
                 'usuario_responsavel' => $usuario ? $usuario->nome_completo : '—',
-                'usuario_responsavel_cpf' => $usuario ? $usuario->cpf : null,
+                'usuario_responsavel_cpf' => $usuario ? $politica->cpf($usuario->cpf, $usuario->uuid, false) : null,
                 'usuario_responsavel_uuid' => $usuario ? $usuario->uuid : null,
                 'usuario_responsavel_tipo_vinculo' => $usuario ? $usuario->pivot->tipo_vinculo : null,
                 'usuario_responsavel_percentual' => $usuario ? $usuario->pivot->percentual_responsabilidade : null,

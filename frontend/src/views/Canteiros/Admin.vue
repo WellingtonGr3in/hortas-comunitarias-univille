@@ -158,6 +158,7 @@
 import api from '@/services/api'
 import canteirosService from '@/services/canteiros.service'
 import { ehAdmin } from '@/utils/permissoes'
+import { cpfCorresponde } from '@/utils/format'
 
 export default {
   name: 'CanteirosAdminView',
@@ -185,12 +186,11 @@ export default {
         const texto = [
           c.numero_identificador,
           c.usuario_responsavel,
-          c.usuario_responsavel_cpf,
           c.horta_nome,
           c.localizacao
         ].join(' ').toLowerCase()
 
-        const passaBusca = !termo || texto.includes(termo)
+        const passaBusca = !termo || texto.includes(termo) || cpfCorresponde(c.usuario_responsavel_cpf, termo)
         const passaStatus = !this.statusFiltro || c.status === this.statusFiltro
         const passaHorta = !this.hortaFiltro || c.horta_uuid === this.hortaFiltro
 
