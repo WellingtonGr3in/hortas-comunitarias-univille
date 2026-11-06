@@ -2,7 +2,7 @@
 
 Aplicativo mobile desenvolvido em React Native + Expo para o sistema de gestão de hortas comunitárias.
 
-> ⚠️ **IMPORTANTE**: Correções críticas aplicadas em 29/10/2025. Ver [RESUMO_CORRECOES.md](./RESUMO_CORRECOES.md) para detalhes.
+> ⚠️ **IMPORTANTE**: Correções críticas aplicadas em 29/10/2025. O histórico está em [RESUMO_CORRECOES.md](../docs/legado/mobile/RESUMO_CORRECOES.md).
 
 ## 📋 Funcionalidades MVP
 
@@ -226,7 +226,7 @@ expo build:ios
 **Solução**: Payload ajustado para `{associacao, usuario}`  
 **Status**: ✅ CORRIGIDO
 
-📖 **Ver detalhes completos**: [RESUMO_CORRECOES.md](./RESUMO_CORRECOES.md)
+📖 **Ver detalhes completos**: [RESUMO_CORRECOES.md](../docs/legado/mobile/RESUMO_CORRECOES.md)
 
 ---
 
@@ -273,10 +273,9 @@ export const API_URL = 'http://SEU_IP:8181/api';
 ## 📚 Documentação de Referência
 
 ### Documentação do Projeto
-- [Resumo das Correções](./RESUMO_CORRECOES.md) ⭐ **LEIA PRIMEIRO**
-- [Guia de Teste Rápido](./TESTE_RAPIDO.md)
-- [Notas Técnicas](./NOTAS_TECNICAS.md)
-- [Changelog Completo](./CHANGELOG.md)
+- [Guia da documentação](../DOCUMENTACAO.md) ⭐ **LEIA PRIMEIRO**
+- [Manual do Usuário](../docs/MANUAL_USUARIO.md)
+- Histórico (arquivado): [Resumo das Correções](../docs/legado/mobile/RESUMO_CORRECOES.md), [Guia de Teste Rápido](../docs/legado/mobile/TESTE_RAPIDO.md), [Notas Técnicas](../docs/legado/mobile/NOTAS_TECNICAS.md)
 - [API Backend](../docs/api/README.md)
 - [Banco de Dados](../docs/db/README.md)
 

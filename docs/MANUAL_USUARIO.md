@@ -1,12 +1,21 @@
 # Manual do Usuário — Hortas Comunitárias
 
-Atualizado em 22/10/2026
+Atualizado em 06/11/2026
 
 Este manual mostra, em passo a passo, as tarefas mais comuns de cada perfil do sistema Hortas Comunitárias. Ele foi escrito para quem cuida de uma horta no dia a dia, não para quem trabalha com tecnologia.
 
 ## Antes de começar
 
 O sistema tem duas formas de acesso: o **site**, usado pelos administradores, e o **aplicativo de celular**, pensado para o canteirista. Cada pessoa entra com o próprio e-mail e senha, e o sistema mostra só o que aquele perfil pode ver ou mudar.
+
+**Criar uma conta para a sua associação**
+
+Se a sua associação ainda não usa o sistema, você mesmo pode criar a conta:
+
+1. Na tela de entrada, clique em **Criar conta**.
+2. Em **Associação**, preencha razão social, nome fantasia e CNPJ.
+3. Em **Administrador**, preencha os seus dados: nome completo, como prefere ser chamado, CPF, data de nascimento, e-mail e senha (duas vezes).
+4. Clique em **Criar conta**. O sistema já entra com o seu e-mail e você passa a ser o administrador dessa associação.
 
 **Como entrar no site**
 
@@ -28,8 +37,8 @@ Em **Notificações**, os avisos que você ainda não leu aparecem com um ponto 
 | Perfil | O que faz no sistema |
 | --- | --- |
 | Administrador da plataforma | Cuida das associações cadastradas e do financeiro da plataforma |
-| Administrador de associação | Cuida das hortas da associação, dos associados e do financeiro da associação |
-| Administrador de horta | Cuida dos canteiros, canteiristas, dependentes e do financeiro da horta |
+| Administrador de associação | Cuida das hortas da associação, dos associados, do financeiro e do inventário da associação |
+| Administrador de horta | Cuida dos canteiros, canteiristas, dependentes, do financeiro e do inventário da horta |
 | Canteirista | Consulta seus pagamentos, sua associação, seus canteiros e seus dependentes |
 
 ## Administrador da plataforma
@@ -60,7 +69,10 @@ Você cuida do sistema como um todo: quais associações usam a plataforma e se 
 1. No menu, clique em **Mensalidades**.
 2. A lista mostra, para cada pessoa, o plano, o valor, o vencimento e a situação: **Paga**, **Pendente** ou **Atrasada**.
 3. Para ver só quem deve, escolha **Pendentes** ou **Atrasadas** no filtro de status.
-4. Quando alguém pagar, clique em **Marcar como paga** na linha daquela mensalidade.
+4. Quando alguém pagar, clique em **Registrar pagamento** na linha daquela mensalidade.
+5. Confira o valor, informe a data, escolha **PIX** ou **Dinheiro**, escreva uma observação se quiser e clique em **Registrar pagamento**. A mensalidade passa a aparecer como **Paga** e o pagamento entra em **Pagamentos**.
+
+Para cobrar uma associação, clique em **Nova mensalidade**, escolha a associação, o valor e o vencimento e salve. Ela começa como pendente.
 
 **5. Mandar um aviso para todos**
 
@@ -69,6 +81,14 @@ Você cuida do sistema como um todo: quais associações usam a plataforma e se 
 3. Escreva um título curto e a mensagem.
 4. Escolha a prioridade (baixa, média ou alta) e a data de início.
 5. Clique em **Salvar**. O aviso aparece para os usuários.
+
+**6. Cadastrar um plano**
+
+O plano define quanto cada associação paga pelo uso da plataforma. Só o administrador da plataforma vê esta tela.
+
+1. No menu, clique em **Planos** e depois em **Novo plano**.
+2. Preencha o código, o nome, um apelido sem espaços em **Slug** (por exemplo `plano_bronze`), o valor em reais e, se quiser, uma descrição.
+3. Clique em **Salvar**. Para mudar um plano depois, clique em **Editar** na linha dele.
 
 ## Administrador de associação
 
@@ -108,6 +128,21 @@ Você cuida das hortas que pertencem à sua associação, das pessoas associadas
 1. Em **Pagamentos**, olhe a lista de pagamentos.
 2. Os pagamentos quitados aparecem como **Pago**.
 3. Quem ainda não pagou aparece sem essa marcação. Use **Filtros** para achar uma pessoa ou um período.
+
+**6. Cobrar a mensalidade de um canteirista**
+
+1. No menu, clique em **Mensalidades da associação** e depois em **Nova mensalidade**.
+2. Escolha a associação e o canteirista, informe o valor e o vencimento e salve. A mensalidade começa como pendente.
+3. Para ver quem deve, use o filtro de status: **Pendentes** ou **Atrasadas**.
+4. Quando o canteirista pagar, clique em **Marcar como paga** na linha da mensalidade.
+
+**7. Consultar os usuários**
+
+1. No menu, clique em **Usuários**. No topo aparecem o total de usuários, quantos há de cada cargo e quantos estão ativos.
+2. Para achar alguém, digite nome, e-mail ou CPF na busca, ou filtre por cargo, associação ou horta.
+3. Esta tela só mostra. Para mudar os dados de um canteirista, use **Canteiristas**.
+
+O inventário funciona igual para o administrador de associação e o de horta. Veja **Controlar o inventário**, na parte do administrador de horta.
 
 ## Administrador de horta
 
@@ -154,6 +189,29 @@ Você cuida do dia a dia de uma horta: os canteiros, quem planta em cada um, os 
 1. Em **Canteiros**, clique em **Editar** no canteiro.
 2. Em **Canteirista Proprietário**, escolha **Sem proprietário**.
 3. Mude o status para **Disponível** ou **Em Preparo** e clique em **Salvar**.
+
+**7. Controlar o inventário**
+
+O inventário guarda os insumos (adubo, sementes, substrato) e as ferramentas da horta ou da associação. Cada item pertence a uma horta ou a uma associação, nunca às duas.
+
+Para cadastrar um item:
+
+1. No menu, clique em **Inventário** e depois em **+ Novo item**.
+2. Preencha o nome, escolha o tipo (**Insumo** ou **Ferramenta**) e a unidade de medida (kg, litro, unidade, saco...).
+3. Em **Pertence a**, escolha a horta ou a associação. Isso não muda depois.
+4. Informe a quantidade que existe hoje e, se quiser, uma **Quantidade mínima**. Quando o estoque ficar abaixo dela, o item aparece como **Estoque baixo**.
+5. Clique em **Salvar**.
+
+Depois do cadastro, a quantidade só muda por movimentação:
+
+1. Na lista, clique em **Movimentar** no item.
+2. Escolha o tipo:
+   - **Entrada:** chegou mais (uma compra ou doação). Soma ao estoque.
+   - **Saída:** foi usado ou emprestado. Diminui o estoque. O sistema não deixa tirar mais do que existe.
+   - **Ajuste:** você contou e o número é diferente. Informe o total contado, que passa a ser o novo estoque.
+3. Escreva uma observação, por exemplo "uso no canteiro 3", e salve.
+
+Para ver o que aconteceu com um item, clique no nome dele: aparece o **Histórico de movimentações**, com data, tipo, quantidade e quem registrou. Para achar o que está acabando, marque **Só estoque baixo** na lista.
 
 ## Canteirista
 
@@ -202,6 +260,9 @@ Por enquanto os dependentes aparecem só no site. Entre no site com o mesmo e-ma
 | Canteiro | Pedaço de terra da horta, com número e tamanho em metros quadrados, entregue a um canteirista. Pode estar disponível, ocupado ou em preparo. |
 | Chave | Cópia da chave do portão ou do depósito da horta. O sistema registra qual chave existe e se ela está disponível ou emprestada. |
 | Dependente | Pessoa ligada a um canteirista, como um filho ou cônjuge, que pode ajudar no canteiro dele. O dependente não entra no sistema: quem cadastra e consulta é o administrador da horta e o próprio canteirista. |
-| Fila de espera | Lista, em ordem de chegada, de pessoas que querem um canteiro numa horta onde não há canteiro livre. Quando um canteiro vaga, a próxima da fila é chamada. |
+| Fila de espera | Lista, em ordem de chegada, de pessoas que querem um canteiro numa horta onde não há canteiro livre. Hoje o sistema só guarda a ordem; quem chama a próxima pessoa quando um canteiro vaga é o administrador da horta. |
 | Horta | Terreno onde ficam os canteiros. Toda horta pertence a uma associação e tem um responsável. |
+| Insumo | Material que é gasto no uso, como adubo, semente ou substrato. Fica no inventário junto com as ferramentas. |
+| Inventário | Lista dos insumos e ferramentas de uma horta ou de uma associação, com a quantidade de cada um e o histórico de entradas e saídas. |
 | Mensalidade | Valor pago todo mês. O associado paga a mensalidade da associação, e a mensalidade da plataforma é o valor cobrado pelo uso do sistema. Cada uma tem data de vencimento e aparece como "Paga" quando é quitada. |
+| Plano | Pacote que define quanto uma associação paga por mês para usar a plataforma. |

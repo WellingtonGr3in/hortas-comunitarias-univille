@@ -15,6 +15,9 @@ Regra geral: se um documento atual e um documento do legado discordarem, vale o 
 | [backend/README.md](backend/README.md) | Como rodar e configurar a API (com e sem Docker) |
 | [docs/api/README.md](docs/api/README.md) | Rotas da API REST, regras de negócio e permissões por cargo |
 | [docs/db/README.md](docs/db/README.md) | Esquema do banco de dados |
+| [docs/DOCKER.md](docs/DOCKER.md) | Sistema completo com Docker em um comando (banco, API e site), com os endereços e usuários de teste |
+| [docs/index.html](docs/index.html) | Página da documentação da API (Redoc). Abra o arquivo no navegador para navegar pelas rotas |
+| [docs/ESPECIFICACAO_FUNCIONAL.md](docs/ESPECIFICACAO_FUNCIONAL.md) | Especificação funcional do Inventário e do Portal do Canteirista |
 | [docs/MANUAL_USUARIO.md](docs/MANUAL_USUARIO.md) | Manual de uso por perfil e glossário, para quem não é de TI |
 | [frontend/README.md](frontend/README.md) | Como rodar e configurar o site (Vue.js) |
 | [frontend/INTEGRACAO.md](frontend/INTEGRACAO.md) | Como o site conversa com a API |
